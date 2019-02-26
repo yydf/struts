@@ -1,42 +1,32 @@
 # struts
 
-Summary
--------
-A simple, light Java WEB + ORM framework.
-
-Generated project characteristics
+特性
 -------------------------
-* No-xml
-* Easy to use
-* Light MVC
-* ORM with tomcat jdbc
-* JSTL for jsp
-* XSS filter
+* 零配置
+* 高并发JDBC
 
-Prerequisites
+环境
 -------------
 - JDK 7
 - Tomcat 8
 
-Switching to struts
+如何使用
 -----------------------
-
-* Add dependency to java web in POM:
+* 添加dependency到POM文件:
 
 ```
 <dependency>
-    <groupId>com.github.yydf</groupId>
+    <groupId>cn.4coder</groupId>
     <artifactId>struts</artifactId>
-    <version>1.0.2</version>
+    <version>0.0.1</version>
 </dependency>
 ```
 
-* Coding:
+* 编码:
 
 ```
 @Request("/banner")
-public class BannerController extends ActionSupport
-{
+public class BannerController extends ActionSupport {
 	@Resource
 	private BannerService bannerService;
 	
@@ -56,6 +46,15 @@ public class BannerController extends ActionSupport
 		//获取上传的文件对象
 		MultipartFile file = getMultipartFile("name");
 		return "ok";
+	}
+}
+```
+
+```
+public class BannerDao extends DaoSupport {
+
+	public List<BannerVo> getAdList() {
+		return jdbc().selectList(BannerVo.class, "select * from bz_banner");
 	}
 }
 ```
