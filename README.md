@@ -1,4 +1,8 @@
 # struts
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/cn.4coder/struts/badge.svg)](https://maven-badges.herokuapp.com/maven-central/cn.4coder/struts/)
+[![GitHub release](https://img.shields.io/github/release/yydf/struts.svg)](https://github.com/yydf/struts/releases)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://raw.githubusercontent.com/yydf/struts/master/LICENSE)
+![Jar Size](https://img.shields.io/badge/jar--size-68.57k-blue.svg)
 
 特性
 -------------------------
