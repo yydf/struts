@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.core.ActionMapper;
 import cn.coder.struts.core.StrutsContext;
+import cn.coder.struts.util.ThreadEx;
 
 public class StrutsFilter implements Filter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
@@ -64,6 +65,7 @@ public class StrutsFilter implements Filter {
 
 	@Override
 	public void destroy() {
+		ThreadEx.clear();
 		context.destroy();
 		context = null;
 	}

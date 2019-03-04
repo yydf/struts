@@ -26,4 +26,12 @@ public class ThreadEx {
 		executor.execute(r);
 		logger.debug("Runnable end");
 	}
+
+	public static void clear() {
+		logger.debug("Shutdown the executor");
+		if (executor != null) {
+			executor.shutdown();
+			executor = null;
+		}
+	}
 }

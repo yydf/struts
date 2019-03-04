@@ -89,6 +89,8 @@ public class MultipartFile {
 		this.extension = null;
 		this.size = null;
 		this.inputStream = null;
+		this.fieldName = null;
+		this.contentType = null;
 	}
 
 }

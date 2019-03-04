@@ -54,6 +54,10 @@ public abstract class ActionSupport implements processFile {
 			return obj.toString();
 		return null;
 	}
+	
+	protected void setSession(String name, Object value) {
+		request.getSession().setAttribute(name, value);
+	}
 
 	protected static String getSession(String name, String sId) {
 		Object obj = SessionWrapper.getAttribute(name, sId);
