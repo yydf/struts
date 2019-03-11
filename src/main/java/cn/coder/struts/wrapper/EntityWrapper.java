@@ -16,7 +16,7 @@ import cn.coder.struts.annotation.Table;
 import cn.coder.struts.util.FieldUtils;
 
 public class EntityWrapper {
-	static final Logger logger = LoggerFactory.getLogger(EntityWrapper.class);
+	private static final Logger logger = LoggerFactory.getLogger(EntityWrapper.class);
 	private String tableName;
 	private Field generateKeyField;
 	private ArrayList<String> primaryKeys;

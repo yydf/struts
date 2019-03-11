@@ -39,6 +39,14 @@ public abstract class ActionSupport implements processFile {
 		this.response = res2;
 	}
 
+	protected HttpServletRequest getRequest() {
+		return this.request;
+	}
+
+	protected HttpServletResponse getResponse() {
+		return this.response;
+	}
+
 	protected String getParameter(String name) {
 		if (isMultipartRequest)
 			return multipartWrapper.getField(name);
@@ -48,22 +56,16 @@ public abstract class ActionSupport implements processFile {
 		return request.getParameter(name);
 	}
 
-	protected String getSession(String name) {
-		Object obj = request.getSession().getAttribute(name);
-		if (obj != null)
-			return obj.toString();
-		return null;
+	protected Object getSession(String name) {
+		return request.getSession().getAttribute(name);
 	}
-	
+
 	protected void setSession(String name, Object value) {
 		request.getSession().setAttribute(name, value);
 	}
 
-	protected static String getSession(String name, String sId) {
-		Object obj = SessionWrapper.getAttribute(name, sId);
-		if (obj != null)
-			return obj.toString();
-		return null;
+	protected static Object getSession(String name, String sId) {
+		return SessionWrapper.getAttribute(name, sId);
 	}
 
 	protected String getSessionId() {
@@ -94,7 +96,7 @@ public abstract class ActionSupport implements processFile {
 		}
 		return valid;
 	}
-
+	
 	protected String getRemoteAddr() {
 		String ip = request.getRemoteAddr();
 		if ("127.0.0.1".equals(ip))

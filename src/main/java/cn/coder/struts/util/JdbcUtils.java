@@ -13,7 +13,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class JdbcUtils {
+	private static final Logger logger = LoggerFactory.getLogger(JdbcUtils.class);
 
 	public static void bindArgs(PreparedStatement stmt, Object[] objs) throws SQLException {
 		if (objs != null && objs.length > 0) {
@@ -96,9 +100,16 @@ public class JdbcUtils {
 			try {
 				stmt.close();
 			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("Close statement faild", e);
 			}
+		}
+	}
+
+	public static void registerDriver(String driverClassName) {
+		try {
+			Class.forName(driverClassName);
+		} catch (ClassNotFoundException e) {
+			logger.error("Register driver faild", e);
 		}
 	}
 
@@ -114,7 +125,7 @@ public class JdbcUtils {
 				DriverManager.deregisterDriver(driver);
 			}
 		} catch (Exception ex) {
-
+			logger.error("Deregister driver faild", ex);
 		}
 	}
 
@@ -122,6 +133,7 @@ public class JdbcUtils {
 		try {
 			return conn.isValid(0);
 		} catch (SQLException e) {
+			logger.error("Is valid error", e);
 			return false;
 		}
 	}
@@ -133,7 +145,7 @@ public class JdbcUtils {
 				conn.close();
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error("Close connection faild", e);
 		}
 	}
 }

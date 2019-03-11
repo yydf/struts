@@ -45,7 +45,7 @@ public class SqlSessionBase {
 		try {
 			Connection con = tran.Connection();
 			con.setAutoCommit(true);
-			((cn.coder.struts.jdbc.pool.DataSource)ds).returnConnection(con);
+			((cn.coder.struts.jdbc.pool.DataSource)ds).releaseConnection(con);
 			logger.debug("Tranction closed");
 		} catch (SQLException e) {
 			logger.error("Tranction close faile", e);
@@ -84,7 +84,7 @@ public class SqlSessionBase {
 			mapper.clean();
 			JdbcUtils.closeStatement(stmt);
 			if (close) {
-				((cn.coder.struts.jdbc.pool.DataSource)ds).returnConnection(con);
+				((cn.coder.struts.jdbc.pool.DataSource)ds).releaseConnection(con);
 			}
 		}
 	}
@@ -271,7 +271,7 @@ public class SqlSessionBase {
 		logger.debug("Sql session created");
 	}
 
-	public static void createSession(Properties properties) {
+	public static void createSession(Properties properties) throws SQLException {
 		cn.coder.struts.jdbc.pool.DataSource ds = new cn.coder.struts.jdbc.pool.DataSource();
 		ds.createPool(properties);
 		createSession(ds);

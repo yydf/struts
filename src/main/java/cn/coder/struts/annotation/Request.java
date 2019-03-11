@@ -12,10 +12,10 @@ public @interface Request {
 
 	String value() default "";// 请求链接
 
-	HttpMethod method() default HttpMethod.GET;// 请求方式
+	HttpMethod method() default HttpMethod.ALL;// 请求方式
 
 	public enum HttpMethod {
-		GET, POST
+		ALL, GET, POST
 	}
 
 }

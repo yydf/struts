@@ -33,7 +33,7 @@ public class StrutsFilter implements Filter {
 		long start = System.currentTimeMillis();
 		request.setCharacterEncoding("utf-8");
 		response.setCharacterEncoding("utf-8");
-		
+
 		HttpServletRequest req = (HttpServletRequest) request;
 		if (logger.isDebugEnabled())
 			logger.debug("Request [{}]{}", req.getMethod(), req.getServletPath());
@@ -44,7 +44,7 @@ public class StrutsFilter implements Filter {
 		ActionMapper action = context.findAction(req.getServletPath());
 		if (action != null) {
 			HttpServletResponse res = (HttpServletResponse) response;
-			if (!req.getMethod().equals(action.getMethod())) {
+			if (!action.checkMethod(req.getMethod())) {
 				res.sendError(405, "Request method '" + req.getMethod() + "' not supported");
 				if (logger.isDebugEnabled())
 					logger.debug("{} method not allowed", req.getMethod());

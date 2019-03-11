@@ -9,14 +9,15 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 日期工具类
+ * 
+ * @author YYDF 2019-03-07
+ */
 public class DateEx {
 	private static final Logger logger = LoggerFactory.getLogger(DateEx.class);
 	// private static final Calendar c = Calendar.getInstance();
-	
-	public static String today() {
-		return today("", false);
-	}
-	
+
 	public static String today(String join) {
 		return today(join, false);
 	}
@@ -35,26 +36,22 @@ public class DateEx {
 			return null;
 		if (value instanceof Timestamp)
 			return (Date) value;
-		if (value instanceof String) {
-			int len = value.toString().length();
-			String format;
-			switch (len) {
-			case 8:
-				format = "yyyyMMdd";
-				break;
-			case 10:
-				format = "yyyy-MM-dd";
-				break;
-			default:
-				format = "yyyy-MM-dd HH:mm:ss";
-				break;
-			}
-			return toDate(value.toString(), format);
-		}
-		return null;
+		int len = value.toString().length();
+		String format;
+		if (len == 8)
+			format = "yyyyMMdd";
+		else if (len == 10)
+			format = "yyyy-MM-dd";
+		else if (len == 14)
+			format = "yyyyMMddHHmmss";
+		else if (len == 19)
+			format = "yyyy-MM-dd HH:mm:ss";
+		else
+			throw new NullPointerException("Unsuppord date length " + len);
+		return toDate(value.toString(), format);
 	}
 
-	private static Date toDate(String str, String format) {
+	public static Date toDate(String str, String format) {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat(format);
 			return sdf.parse(str);

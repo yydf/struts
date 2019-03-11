@@ -10,4 +10,19 @@ public class StringUtils {
 		return !isEmpty(field);
 	}
 
+	public static String padLeft(Object orgin, String str, int len) {
+		Assert.notNull(orgin, "orgin string");
+		int length = orgin.toString().length();
+		int remaining = len - length;
+		if (remaining > 0) {
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < remaining; i++) {
+				sb.append(str);
+			}
+			sb.append(orgin);
+			return sb.toString();
+		}
+		return orgin.toString();
+	}
+
 }

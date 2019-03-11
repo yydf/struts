@@ -2,6 +2,7 @@ package cn.coder.struts;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,7 +12,7 @@ import cn.coder.struts.jdbc.SqlSession;
 import cn.coder.struts.jdbc.SqlSessionBase;
 
 public class test {
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, SQLException {
 		InputStream input = test.class.getClassLoader().getResourceAsStream("jdbc.properties");
 		if (input != null) {
 			Properties properties = new Properties();

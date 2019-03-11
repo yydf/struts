@@ -11,7 +11,7 @@ public class DataSource implements javax.sql.DataSource {
 
 	private ConnectionPool pool;
 
-	public synchronized void createPool(Properties properties) {
+	public synchronized void createPool(Properties properties) throws SQLException {
 		if (pool == null) {
             this.pool = new ConnectionPool(properties);
         }
@@ -69,8 +69,8 @@ public class DataSource implements javax.sql.DataSource {
 		return getConnection();
 	}
 
-	public void returnConnection(Connection con) {
-		pool.returnConnection(con);
+	public void releaseConnection(Connection con) {
+		pool.releaseConnection(con);
 	}
 
 	public void close() {

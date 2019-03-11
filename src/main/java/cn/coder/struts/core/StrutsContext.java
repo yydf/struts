@@ -3,6 +3,7 @@ package cn.coder.struts.core;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -48,7 +49,7 @@ public class StrutsContext implements FilterClassType {
 				properties.load(input);
 				SqlSessionBase.createSession(properties);
 			}
-		} catch (IOException e) {
+		} catch (IOException | SQLException e) {
 			logger.error("Create session faild", e);
 		}
 	}

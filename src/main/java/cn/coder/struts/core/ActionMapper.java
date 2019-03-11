@@ -82,10 +82,14 @@ public class ActionMapper {
 		}
 	}
 
-	public String getMethod() {
-		if (httpMethod != null)
-			return httpMethod.name();
-		return null;
+	public boolean checkMethod(String method) {
+		if (httpMethod == null)
+			return true;
+		if (httpMethod == HttpMethod.ALL)
+			return true;
+		if (httpMethod.name().equals(method))
+			return true;
+		return false;
 	}
 
 }
