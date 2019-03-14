@@ -28,6 +28,10 @@ public final class JSONMap {
 		return this;
 	}
 
+	public void clear() {
+		this.data.clear();
+	}
+
 	@Override
 	public String toString() {
 		return wrapper.write(data);

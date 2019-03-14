@@ -1,4 +1,4 @@
-package cn.coder.struts.core;
+package cn.coder.struts.wrapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,20 +21,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.annotation.Request;
-import cn.coder.struts.core.ContextUtils.FilterClassType;
 import cn.coder.struts.jdbc.SqlSessionBase;
 import cn.coder.struts.support.ActionIntercepter;
+import cn.coder.struts.util.StrutsUtils;
+import cn.coder.struts.util.StrutsUtils.FilterClassType;
 
-public class StrutsContext implements FilterClassType {
+public class WebContextWrapper implements FilterClassType {
 
-	static final Logger logger = LoggerFactory.getLogger(StrutsContext.class);
-	private final HashMap<String, ActionMapper> actionMap = new HashMap<>();
-	private final ArrayList<Class<?>> classes = new ArrayList<>();
+	private static final Logger logger = LoggerFactory.getLogger(WebContextWrapper.class);
+	private ActionWrapper actionWrapper;
+	private final HashMap<Class<?>, Object> classes = new HashMap<>();
 	private final ArrayList<ActionIntercepter> filters = new ArrayList<>();
 
-	public void init(ServletContext ctx) throws ServletException {
+	public void init(ServletContext ctx, ActionWrapper wrapper) throws ServletException {
 		long start = System.nanoTime();
-		ContextUtils.scanClasses(ctx, "/", this);
+		this.actionWrapper = wrapper;
+		StrutsUtils.scanClasses(ctx, "/", this);
 		registerAction(ctx.getFilterRegistration("StrutsFilter"));
 		createSession();
 		logger.debug("Init context:" + (System.nanoTime() - start) + "ns");
@@ -42,7 +44,7 @@ public class StrutsContext implements FilterClassType {
 
 	private void createSession() {
 		try {
-			InputStream input = StrutsContext.class.getClassLoader().getResourceAsStream("jdbc.properties");
+			InputStream input = WebContextWrapper.class.getClassLoader().getResourceAsStream("jdbc.properties");
 			if (input != null) {
 				logger.debug("Find the jdbc.properties file");
 				Properties properties = new Properties();
@@ -55,35 +57,36 @@ public class StrutsContext implements FilterClassType {
 	}
 
 	private void registerAction(FilterRegistration filterRegistration) throws ServletException {
-		if (!actionMap.isEmpty()) {
+		Set<String> mappedUrls = actionWrapper.getMappedUrls();
+		if (!mappedUrls.isEmpty()) {
 			EnumSet<DispatcherType> dispatcherTypes = EnumSet.allOf(DispatcherType.class);
 			dispatcherTypes.add(DispatcherType.REQUEST);
 			dispatcherTypes.add(DispatcherType.FORWARD);
-			Set<String> actions = actionMap.keySet();
-			for (String action : actions) {
+			for (String action : mappedUrls) {
 				filterRegistration.addMappingForUrlPatterns(dispatcherTypes, true, action);
-				actionMap.get(action).createBean(classes);
 			}
-			logger.debug("Registered actions " + actions.size());
+			actionWrapper.createBean(classes);
+			// 清除缓存
+			classes.clear();
+			logger.debug("Registered actions " + mappedUrls.size());
 		}
 	}
 
 	@Override
 	public void filter(Class<?> clazz) {
 		if (clazz != null) {
-			if (ContextUtils.isController(clazz)) {
+			if (StrutsUtils.isController(clazz)) {
 				bindActions(clazz);
-			}
-			else if (ContextUtils.isFilter(clazz)) {
+			} else if (StrutsUtils.isFilter(clazz)) {
 				bindFilter(clazz);
 			}
-			classes.add(clazz);
+			classes.put(clazz, null);
 		}
 	}
 
 	private void bindFilter(Class<?> clazz) {
 		try {
-			filters.add((ActionIntercepter)clazz.newInstance());
+			filters.add((ActionIntercepter) clazz.newInstance());
 		} catch (InstantiationException | IllegalAccessException e) {
 			logger.error("Instance intercepter faild", e);
 		}
@@ -96,7 +99,7 @@ public class StrutsContext implements FilterClassType {
 		for (Method method : methods) {
 			methodReq = method.getAnnotation(Request.class);
 			if (methodReq != null) {
-				actionMap.put(ContextUtils.getUrlMapping(classReq, methodReq.value()), new ActionMapper(method));
+				actionWrapper.put(StrutsUtils.getUrlMapping(classReq, methodReq.value()), method);
 			}
 		}
 	}
@@ -104,20 +107,17 @@ public class StrutsContext implements FilterClassType {
 	public void destroy() {
 		long start = System.nanoTime();
 		classes.clear();
-		actionMap.clear();
+		actionWrapper.clear();
+		actionWrapper = null;
 		filters.clear();
 		SqlSessionBase.destory();
 		logger.debug("Destroy context:" + (System.nanoTime() - start) + "ns");
 	}
 
-	public ActionMapper findAction(String servletPath) {
-		return actionMap.get(servletPath);
-	}
-
 	public boolean checkFilter(HttpServletRequest req, HttpServletResponse res) {
-		if(!filters.isEmpty()){
+		if (!filters.isEmpty()) {
 			for (ActionIntercepter intercepter : filters) {
-				if(!intercepter.intercept(req, res))
+				if (!intercepter.intercept(req, res))
 					return false;
 			}
 		}

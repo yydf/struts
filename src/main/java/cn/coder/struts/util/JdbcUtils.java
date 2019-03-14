@@ -148,4 +148,12 @@ public class JdbcUtils {
 			logger.error("Close connection faild", e);
 		}
 	}
+
+	public static void clearWarnings(Connection con) {
+		try {
+			con.clearWarnings();
+		} catch (SQLException e) {
+			logger.error("Clear warnings faild", e);
+		}
+	}
 }

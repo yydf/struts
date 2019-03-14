@@ -14,10 +14,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FieldUtils {
-	static final List<String> PRIMITIVE_TYPE = Arrays.asList("java.lang.String", "java.lang.Integer", "java.lang.Long");
-	static final Pattern linePattern = Pattern.compile("_(\\w)");
-	static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	static final HashMap<String, String> convertedNames = new HashMap<>(1024);
+	private static final List<String> PRIMITIVE_TYPE = Arrays.asList("java.lang.String", "java.lang.Integer",
+			"java.lang.Long", "java.lang.Boolean");
+	private static final Pattern linePattern = Pattern.compile("_(\\w)");
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private static final HashMap<String, String> convertedNames = new HashMap<>(1024);
 
 	public static void setValue(Field field, Object obj, Object value) throws SQLException {
 		if (Modifier.isFinal(field.getModifiers()))

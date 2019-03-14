@@ -35,7 +35,7 @@ public class ConnectionPool {
 		for (int i = 0; i < initialSize; i++) {
 			conn = createConnection();
 			idle.add(conn);
-			logger.debug("Inited {}", conn.toString());
+			logger.debug("Inited {}", conn.hashCode());
 		}
 	}
 
@@ -53,7 +53,7 @@ public class ConnectionPool {
 		Connection conn = idle.poll();
 		if (conn != null) {
 			if (JdbcUtils.isValid(conn)) {
-				logger.debug("Borrowed {}", conn.toString());
+				logger.debug("Borrowed {}", conn.hashCode());
 				return conn;
 			}
 			JdbcUtils.closeConnection(conn);
@@ -72,14 +72,19 @@ public class ConnectionPool {
 
 	public void releaseConnection(Connection con) {
 		if (idle.offer(con)) {
-			logger.debug("Released {}", con.toString());
+			JdbcUtils.clearWarnings(con);
+			logger.debug("Released {}", con.hashCode());
 			synchronized (lockObj) {
 				lockObj.notify();
 			}
+		} else {
+			JdbcUtils.closeConnection(con);
+			logger.warn("Released {} faild and force close", con.hashCode());
 		}
 	}
 
 	public void clear() {
+		logger.debug("Pool start clear");
 		for (Connection con : idle) {
 			JdbcUtils.closeConnection(con);
 		}

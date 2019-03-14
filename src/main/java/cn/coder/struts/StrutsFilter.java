@@ -1,6 +1,7 @@
 package cn.coder.struts;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -14,17 +15,21 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.core.ActionMapper;
-import cn.coder.struts.core.StrutsContext;
 import cn.coder.struts.util.ThreadEx;
+import cn.coder.struts.util.StrutsUtils;
+import cn.coder.struts.wrapper.ActionWrapper;
+import cn.coder.struts.wrapper.ResponseWrapper;
+import cn.coder.struts.wrapper.WebContextWrapper;
 
 public class StrutsFilter implements Filter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
-	private StrutsContext context = new StrutsContext();
+	private WebContextWrapper context = new WebContextWrapper();
+	private ResponseWrapper wrapper = new ResponseWrapper();
+	private ActionWrapper actionWrapper = new ActionWrapper();
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		context.init(filterConfig.getServletContext());
+		context.init(filterConfig.getServletContext(), actionWrapper);
 	}
 
 	@Override
@@ -41,10 +46,10 @@ public class StrutsFilter implements Filter {
 			chain.doFilter(request, response);
 			return;
 		}
-		ActionMapper action = context.findAction(req.getServletPath());
-		if (action != null) {
+		Method method = actionWrapper.getActionMethod(req.getServletPath());
+		if (method != null) {
 			HttpServletResponse res = (HttpServletResponse) response;
-			if (!action.checkMethod(req.getMethod())) {
+			if (!StrutsUtils.allowHttpMethod(method, req.getMethod())) {
 				res.sendError(405, "Request method '" + req.getMethod() + "' not supported");
 				if (logger.isDebugEnabled())
 					logger.debug("{} method not allowed", req.getMethod());
@@ -52,20 +57,26 @@ public class StrutsFilter implements Filter {
 			}
 			if (!context.checkFilter(req, res)) {
 				if (logger.isDebugEnabled())
-					logger.debug("Action stoped");
+					logger.debug("Action stoped by filter");
 				return;
 			}
-			action.execute(req, res);
-			if (logger.isDebugEnabled())
-				logger.debug("Request finished with {}ms", (System.currentTimeMillis() - start));
+			Object result = actionWrapper.execute(method, req, res);
+			if (result != null) {
+				wrapper.doResponse(result, req, res);
+			}
 		} else {
 			chain.doFilter(request, response);
 		}
+		if (logger.isDebugEnabled())
+			logger.debug("Request finished with {}ms", (System.currentTimeMillis() - start));
 	}
 
 	@Override
 	public void destroy() {
 		ThreadEx.clear();
+		actionWrapper.clear();
+		actionWrapper = null;
+		wrapper = null;
 		context.destroy();
 		context = null;
 	}

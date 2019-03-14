@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.core.ContextUtils;
+import cn.coder.struts.util.StrutsUtils;
 import cn.coder.struts.view.JSONMap;
 
 public class ResponseWrapper {
@@ -19,11 +19,12 @@ public class ResponseWrapper {
 
 	public void doResponse(Object result, HttpServletRequest req, HttpServletResponse res)
 			throws IOException, ServerException {
-		boolean supportGzip = ContextUtils.isSupportGZip(req);
+		boolean supportGzip = StrutsUtils.isSupportGZip(req);
 		if (result instanceof JSONMap) {
 			res.setContentType("application/json;charset=UTF-8");
 			String json = result.toString();
 			renderText(json, supportGzip, res);
+			((JSONMap) result).clear();
 			if (logger.isDebugEnabled())
 				logger.debug("[JSON]" + json);
 		} else if (result instanceof String) {
