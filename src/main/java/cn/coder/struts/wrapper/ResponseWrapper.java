@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.util.StrutsUtils;
 import cn.coder.struts.view.JSONMap;
 
@@ -26,13 +27,13 @@ public class ResponseWrapper {
 			renderText(json, supportGzip, res);
 			((JSONMap) result).clear();
 			if (logger.isDebugEnabled())
-				logger.debug("[JSON]" + json);
+				logger.debug("[JSON]" + StringUtils.sub(json, 1024, "..."));
 		} else if (result instanceof String) {
 			res.setContentType("text/plain;charset=UTF-8");
 			String text = result.toString();
 			renderText(text, supportGzip, res);
 			if (logger.isDebugEnabled())
-				logger.debug("[TEXT]" + text);
+				logger.debug("[TEXT]" + StringUtils.sub(text, 1024, "..."));
 		} else
 			throw new ServerException("Unsupported return type " + result.getClass().getTypeName());
 	}

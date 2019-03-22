@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import cn.coder.struts.jdbc.esql.EasySql;
 import cn.coder.struts.view.PageResult;
 import cn.coder.struts.wrapper.EntityWrapper.SQLType;
 
@@ -16,16 +17,21 @@ public final class SqlSession extends SqlSessionBase {
 		super(ds);
 	}
 
+	public EasySql table(String table) {
+		return EasySql.table(this, table);
+	}
+
 	public <T> List<T> selectList(final Class<T> target, final String sql, Object... array) {
 		return execute(new queryResultMapper<>(target, sql, array));
 	}
 
-	public <T> List<T> selectList(final SqlTranction tran, final Class<T> target, final String sql, Object... array) throws SQLException {
+	public <T> List<T> selectList(final SqlTranction tran, final Class<T> target, final String sql, Object... array)
+			throws SQLException {
 		return execute(tran, new queryResultMapper<>(target, sql, array));
 	}
 
-	public <T> List<T> selectPage(final Class<T> target, final PageResult result, final String fetchSql, final String countSql,
-			Object... array) {
+	public <T> List<T> selectPage(final Class<T> target, final PageResult result, final String fetchSql,
+			final String countSql, Object... array) {
 		result.setTotal(selectOne(Long.class, countSql, array));
 		String fetchSql2 = fetchSql + " LIMIT ?,?";
 		return selectList(target, fetchSql2, mergeArray(array, result.getStartRow(), result.getPageSize()));
@@ -35,7 +41,8 @@ public final class SqlSession extends SqlSessionBase {
 		return execute(new singleResultMapper<>(target, sql, array));
 	}
 
-	public <T> T selectOne(final SqlTranction tran, final Class<T> target, final String sql, Object... array) throws SQLException {
+	public <T> T selectOne(final SqlTranction tran, final Class<T> target, final String sql, Object... array)
+			throws SQLException {
 		return execute(tran, new singleResultMapper<>(target, sql, array));
 	}
 

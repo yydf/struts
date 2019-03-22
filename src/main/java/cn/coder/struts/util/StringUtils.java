@@ -25,4 +25,12 @@ public class StringUtils {
 		return orgin.toString();
 	}
 
+	public static String sub(String str, int len, String replace) {
+		if (str == null)
+			return str;
+		if (str.length() >= len)
+			return str.substring(0, len) + replace;
+		return str;
+	}
+
 }

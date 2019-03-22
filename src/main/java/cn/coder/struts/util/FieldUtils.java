@@ -48,6 +48,9 @@ public class FieldUtils {
 		case "long":
 		case "java.lang.Long":
 			return ObjectUtils.toLong(value);
+		case "boolean":
+		case "java.lang.Boolean":
+			return ObjectUtils.toBoolean(value);
 		case "java.util.Date":
 			return DateEx.toDate(value);
 		default:

@@ -31,6 +31,12 @@ public class ObjectUtils {
 		return Long.parseLong(value.toString());
 	}
 
+	public static Boolean toBoolean(Object value) {
+		if("".equals(value))
+			return null;
+		return Boolean.parseBoolean(value.toString());
+	}
+
 	public static <T> T copyBean(Class<T> clazz, Object obj) throws SQLException {
 		try {
 			T t = clazz.newInstance();

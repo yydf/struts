@@ -3,6 +3,7 @@ package cn.coder.struts;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,6 +21,7 @@ public class test {
 			SqlSessionBase.createSession(properties);
 		}
 		final SqlSession session = SqlSessionBase.getSession();
+		List<Integer> nums = session.table("weiki").where("", "").asc("").skip(0).limit(2).list(Integer.class);
 		long start = System.currentTimeMillis();
 		ExecutorService es = Executors.newCachedThreadPool();
 		final AtomicLong count = new AtomicLong(0);
