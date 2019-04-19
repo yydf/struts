@@ -17,25 +17,31 @@ import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.view.MultipartFile;
 
-public class MultipartRequestWrapper {
+public final class MultipartRequestWrapper {
 
 	static final Logger logger = LoggerFactory.getLogger(MultipartRequestWrapper.class);
 	private HttpServletRequest request;
 	private HashMap<String, String> paras = new HashMap<>();
 	private HashMap<String, MultipartFile> multipartFiles = new HashMap<>();
+	private static ServletFileUpload upload;
 
 	public MultipartRequestWrapper(HttpServletRequest req) {
 		this.request = req;
+		// 初始化一次
+		if (upload == null) {
+			logger.debug("Init file upload");
+			FileItemFactory factory = new DiskFileItemFactory();
+			upload = new ServletFileUpload(factory);
+		}
 	}
 
 	public void processRequest(processFile process) {
-		FileItemFactory factory = new DiskFileItemFactory();
-		ServletFileUpload upload = new ServletFileUpload(factory);
 		try {
 			FileItemIterator items = upload.getItemIterator(request);
 			if (items != null) {
+				FileItemStream stream;
 				while (items.hasNext()) {
-					FileItemStream stream = items.next();
+					stream = items.next();
 					if (stream.isFormField())
 						paras.put(stream.getFieldName(), Streams.asString(stream.openStream(), "utf-8"));
 					else {
@@ -50,10 +56,10 @@ public class MultipartRequestWrapper {
 		}
 	}
 
-	public String getField(String name) {
+	public String getField(String name, String temp) {
 		String str = paras.get(name);
 		if (str == null)
-			str = request.getParameter(name);
+			return temp;
 		return str;
 	}
 

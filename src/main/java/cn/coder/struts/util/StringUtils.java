@@ -33,4 +33,16 @@ public class StringUtils {
 		return str;
 	}
 
+	/**
+	 * 移除JS的无效值
+	 * 
+	 * @param str
+	 *            传入值
+	 * @return null或传入值
+	 */
+	public static String filterJSNull(String str) {
+		if (str == null || "null".equals(str) || "undefined".equals(str) || "NaN".equals(str))
+			return null;
+		return str;
+	}
 }

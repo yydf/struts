@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.util.FieldUtils;
+import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.view.MultipartFile;
 import cn.coder.struts.view.Validated;
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
@@ -48,24 +49,24 @@ public abstract class ActionSupport implements processFile {
 	}
 
 	protected String getParameter(String name) {
+		// 最高优先级
+		Object value = request.getAttribute(name);
+		String str = value == null ? request.getParameter(name) : value.toString();
 		if (isMultipartRequest)
-			return multipartWrapper.getField(name);
-		String str = request.getParameter(name);
-		if ("null".equals(str) || "undefined".equals(str) || "NaN".equals(str))
-			return null;
-		return request.getParameter(name);
+			str = multipartWrapper.getField(name, str);
+		return StringUtils.filterJSNull(str);
 	}
 
 	protected Object getSession(String name) {
 		return request.getSession().getAttribute(name);
 	}
 
-	protected void setSession(String name, Object value) {
-		request.getSession().setAttribute(name, value);
+	protected Object getSession(String name, String sId) {
+		return SessionWrapper.getAttribute(name, sId);
 	}
 
-	protected static Object getSession(String name, String sId) {
-		return SessionWrapper.getAttribute(name, sId);
+	protected void setSession(String name, Object value) {
+		request.getSession().setAttribute(name, value);
 	}
 
 	protected String getSessionId() {
@@ -96,7 +97,7 @@ public abstract class ActionSupport implements processFile {
 		}
 		return valid;
 	}
-	
+
 	protected String getRemoteAddr() {
 		String ip = request.getRemoteAddr();
 		if ("127.0.0.1".equals(ip))

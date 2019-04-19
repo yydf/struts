@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import cn.coder.struts.jdbc.esql.EasySql;
 import cn.coder.struts.view.PageResult;
 import cn.coder.struts.wrapper.EntityWrapper.SQLType;
 
@@ -15,10 +14,6 @@ public final class SqlSession extends SqlSessionBase {
 
 	public SqlSession(DataSource ds) {
 		super(ds);
-	}
-
-	public EasySql table(String table) {
-		return EasySql.table(this, table);
 	}
 
 	public <T> List<T> selectList(final Class<T> target, final String sql, Object... array) {

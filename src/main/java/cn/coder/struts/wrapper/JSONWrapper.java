@@ -115,15 +115,14 @@ public class JSONWrapper {
 	}
 
 	private void appendString(String str) {
+		//转换\n\r\t
 		if (str.indexOf("\n") > -1)
 			str = str.replace("\n", "\\n");
-		if (str.indexOf("\t") > -1)
-			str = str.replace("\t", "\\t");
 		if (str.indexOf("\r") > -1)
 			str = str.replace("\r", "\\r");
+		if (str.indexOf("\t") > -1)
+			str = str.replace("\t", "\\t");
 		//存在单斜杠，则转成双斜杠
-		if (str.indexOf("\\") > -1) 
-			str = str.replace("\\", "\\\\");
 		if (str.indexOf("\"") > -1)
 			str = str.replace("\"", "\\\"");
 		json.append(MARKS).append(str).append(MARKS);
