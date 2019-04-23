@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.annotation.Request;
+import cn.coder.struts.annotation.StartUp;
 import cn.coder.struts.jdbc.SqlSessionBase;
 import cn.coder.struts.support.ActionIntercepter;
 import cn.coder.struts.util.StrutsUtils;
@@ -37,8 +38,8 @@ public class WebContextWrapper implements FilterClassType {
 		long start = System.nanoTime();
 		this.actionWrapper = wrapper;
 		StrutsUtils.scanClasses(ctx, "/", this);
-		registerAction(ctx.getFilterRegistration("StrutsFilter"));
 		createSession();
+		registerAction(ctx.getFilterRegistration("StrutsFilter"));
 		logger.debug("Init context:" + (System.nanoTime() - start) + "ns");
 	}
 
@@ -64,12 +65,14 @@ public class WebContextWrapper implements FilterClassType {
 			dispatcherTypes.add(DispatcherType.FORWARD);
 			for (String action : mappedUrls) {
 				filterRegistration.addMappingForUrlPatterns(dispatcherTypes, true, action);
+				actionWrapper.registerBean(action, classes);
 			}
-			actionWrapper.createBean(classes);
-			// 清除缓存
-			classes.clear();
-			logger.debug("Registered actions " + mappedUrls.size());
 		}
+		// 执行启动类
+		actionWrapper.runStartUp(classes);
+		// 清除缓存
+		classes.clear();
+		logger.debug("Registered actions " + mappedUrls.size());
 	}
 
 	@Override
@@ -96,10 +99,15 @@ public class WebContextWrapper implements FilterClassType {
 		Method[] methods = clazz.getDeclaredMethods();
 		Request classReq = clazz.getAnnotation(Request.class);
 		Request methodReq;
+		StartUp startUp;
 		for (Method method : methods) {
 			methodReq = method.getAnnotation(Request.class);
 			if (methodReq != null) {
 				actionWrapper.put(StrutsUtils.getUrlMapping(classReq, methodReq.value()), method);
+			}
+			startUp = method.getAnnotation(StartUp.class);
+			if (startUp != null) {
+				actionWrapper.add(method);
 			}
 		}
 	}

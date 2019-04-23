@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -18,6 +19,7 @@ import cn.coder.struts.util.FieldUtils;
 
 public class ActionWrapper {
 
+	private final ArrayList<Method> startUpMappings = new ArrayList<>();
 	private final HashMap<String, Method> urlMappings = new HashMap<>();
 	private final HashMap<Method, ActionSupport> cachedBeans = new HashMap<>();
 
@@ -25,7 +27,12 @@ public class ActionWrapper {
 		this.urlMappings.put(urlMapping, method);
 	}
 
+	public void add(Method method) {
+		this.startUpMappings.add(method);
+	}
+
 	public synchronized void clear() {
+		startUpMappings.clear();
 		urlMappings.clear();
 		cachedBeans.clear();
 	}
@@ -34,18 +41,26 @@ public class ActionWrapper {
 		return urlMappings.keySet();
 	}
 
-	public synchronized void createBean(HashMap<Class<?>, Object> classes) throws ServletException {
-		Method method;
-		Set<String> keys = urlMappings.keySet();
-		ActionSupport support;
-		for (String key : keys) {
-			method = urlMappings.get(key);
-			support = (ActionSupport) createBean(method.getDeclaringClass(), classes);
-			cachedBeans.put(method, support);
+	public void registerBean(String action, HashMap<Class<?>, Object> classes) throws ServletException {
+		Method method = urlMappings.get(action);
+		cachedBeans.put(method, (ActionSupport) createBean(method.getDeclaringClass(), classes));
+	}
+
+	public void runStartUp(HashMap<Class<?>, Object> classes) throws ServletException {
+		if (!this.startUpMappings.isEmpty()) {
+			Object obj;
+			for (Method method : this.startUpMappings) {
+				obj = createBean(method.getDeclaringClass(), classes);
+				try {
+					method.invoke(obj);
+				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+					throw new ServletException("Run startup faild", e);
+				}
+			}
 		}
 	}
 
-	private Object createBean(Class<?> clazz, HashMap<Class<?>, Object> classes) throws ServletException {
+	private synchronized Object createBean(Class<?> clazz, HashMap<Class<?>, Object> classes) throws ServletException {
 		try {
 			Object obj = classes.get(clazz);
 			if (obj == null) {
