@@ -24,6 +24,9 @@ public class ResponseWrapper {
 		if (result instanceof JSONMap) {
 			res.setContentType("application/json;charset=UTF-8");
 			String json = result.toString();
+			String callback = req.getParameter("callback");
+			if (StringUtils.isNotBlank(callback))
+				json = callback + "(" + json + ")";
 			renderText(json, supportGzip, res);
 			((JSONMap) result).clear();
 			if (logger.isDebugEnabled())

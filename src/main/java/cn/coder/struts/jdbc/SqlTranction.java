@@ -1,15 +1,22 @@
 package cn.coder.struts.jdbc;
 
 import java.sql.Connection;
+
 import java.sql.SQLException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 数据库事务处理对象
+ * 
+ * @author YYDF
+ *
+ */
 public class SqlTranction {
 
-	private java.sql.Connection conn;
-	static final Logger logger = LoggerFactory.getLogger(SqlTranction.class);
+	private final Connection conn;
+	private static final Logger logger = LoggerFactory.getLogger(SqlTranction.class);
 
 	public SqlTranction(Connection connection) throws SQLException {
 		connection.setAutoCommit(false);
@@ -34,8 +41,8 @@ public class SqlTranction {
 			this.conn.rollback();
 			logger.debug("Tranction rollbacked");
 			logger.error("Tranction error:", e);
-		} catch (SQLException ee) {
-			logger.error("Tranction rollback faild", ee);
+		} catch (SQLException ex) {
+			logger.error("Tranction rollback faild", ex);
 		}
 	}
 }

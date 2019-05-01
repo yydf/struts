@@ -2,12 +2,17 @@ package cn.coder.struts.util;
 
 public class StringUtils {
 
+	public static final String STR_NAN = "NaN";
+	public static final String STR_UNDEFINED = "undefined";
+	public static final String STR_NULL = "null";
+	public static final String STR_EMPTY = "";
+
 	public static boolean isEmpty(Object obj) {
-		return obj == null || "".equals(obj.toString());
+		return obj == null || obj.toString().length() == 0;
 	}
 
-	public static boolean isNotBlank(String field) {
-		return !isEmpty(field);
+	public static boolean isNotBlank(Object obj) {
+		return isEmpty(obj) == false;
 	}
 
 	public static String padLeft(Object orgin, String str, int len) {
@@ -41,7 +46,7 @@ public class StringUtils {
 	 * @return null或传入值
 	 */
 	public static String filterJSNull(String str) {
-		if (str == null || "null".equals(str) || "undefined".equals(str) || "NaN".equals(str))
+		if (str == null || STR_NULL.equals(str) || STR_UNDEFINED.equals(str) || STR_NAN.equals(str))
 			return null;
 		return str;
 	}

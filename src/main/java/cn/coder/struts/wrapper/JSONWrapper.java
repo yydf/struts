@@ -2,6 +2,9 @@ package cn.coder.struts.wrapper;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -16,6 +19,7 @@ public class JSONWrapper {
 	private static final String BRACE_LEFT = "{";
 	private static final String BRACE_RIGHT = "}";
 	private static final String STR_VERSION_UID = "serialVersionUID";
+	private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	final StringBuilder json = new StringBuilder();
 
 	public String write(Map<String, Object> jsonMap) {
@@ -47,6 +51,8 @@ public class JSONWrapper {
 			appendNum(obj);
 		else if (isString(obj))
 			appendString(obj.toString());
+		else if (isDate(obj))
+			appendDate(obj);
 		else if (isArray(obj))
 			appendArray(obj);
 		else if (isList(obj))
@@ -57,6 +63,14 @@ public class JSONWrapper {
 			appendBean(obj);
 		if (hasNext)
 			json.append(COMMA);
+	}
+
+	private void appendDate(Object obj) {
+		json.append(MARKS).append(sdf.format((Date) obj)).append(MARKS);
+	}
+
+	private boolean isDate(Object obj) {
+		return obj instanceof Date || obj instanceof Timestamp;
 	}
 
 	private void appendBean(Object obj) {
@@ -115,14 +129,14 @@ public class JSONWrapper {
 	}
 
 	private void appendString(String str) {
-		//转换\n\r\t
+		// 转换\n\r\t
 		if (str.indexOf("\n") > -1)
 			str = str.replace("\n", "\\n");
 		if (str.indexOf("\r") > -1)
 			str = str.replace("\r", "\\r");
 		if (str.indexOf("\t") > -1)
 			str = str.replace("\t", "\\t");
-		//存在单斜杠，则转成双斜杠
+		// 存在单斜杠，则转成双斜杠
 		if (str.indexOf("\"") > -1)
 			str = str.replace("\"", "\\\"");
 		json.append(MARKS).append(str).append(MARKS);
