@@ -34,5 +34,11 @@ password=123456
 initialSize=4
 ```
 * 编码:
-[https://gitee.com/yydf/easystruts-xjcy/wikis/pages](https://gitee.com/yydf/easystruts-xjcy/wikis/pages)
+```
+[WIKI](https://gitee.com/yydf/easystruts-xjcy/wikis/pages)
+```
+* DEMO示例
+```
+[DEMO](https://gitee.com/yydf/easystruts-xjcy/blob/master/demo.zip)
+```
 
