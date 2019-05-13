@@ -34,47 +34,5 @@ password=123456
 initialSize=4
 ```
 * 编码:
+[https://gitee.com/yydf/easystruts-xjcy/wikis/pages](https://gitee.com/yydf/easystruts-xjcy/wikis/pages)
 
-```
-@Request("/banner")
-public class BannerController extends ActionSupport {
-	@Resource
-	private BannerService bannerService;
-	
-	@Request("/info")
-	public void getBannerInfo(){
-		response.sendRedirect("http://libs.4coder.cn/static/jstl")
-	}
-	
-	@Request("/test")
-	public String test(){
-		String str = getParameter("s");
-		return "12e3" + str;
-	}
-	
-	@Request("/test")
-	public String test(){
-		//通过定义的name参数获取上传的文件对象
-		MultipartFile file = getMultipartFile("name");
-		System.out.println(file.getFileName());
-		return "ok";
-	}
-}
-```
-
-```
-public class BannerDao extends DaoSupport {
-
-	public List<BannerVo> getAdList() {
-		return jdbc().selectList(BannerVo.class, "select * from bz_banner");
-	}
-	
-	public BannerVo getAd() {
-		return jdbc().selectOne(BannerVo.class, "select * from bz_banner where id=?", 1);
-	}
-	
-	public Integer getAdNum() {
-		return jdbc().selectOne(Integer.class, "select count(1) from bz_banner");
-	}
-}
-```
