@@ -1,13 +1,9 @@
 package cn.coder.struts.wrapper;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.servlet.DispatcherType;
@@ -22,10 +18,9 @@ import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.annotation.Request;
 import cn.coder.struts.annotation.StartUp;
-import cn.coder.struts.jdbc.SqlSessionBase;
 import cn.coder.struts.support.ActionIntercepter;
-import cn.coder.struts.util.StrutsUtils;
-import cn.coder.struts.util.StrutsUtils.FilterClassType;
+import cn.coder.struts.util.ClassUtils;
+import cn.coder.struts.util.ClassUtils.FilterClassType;
 
 public class WebContextWrapper implements FilterClassType {
 
@@ -37,24 +32,9 @@ public class WebContextWrapper implements FilterClassType {
 	public void init(ServletContext ctx, ActionWrapper wrapper) throws ServletException {
 		long start = System.nanoTime();
 		this.actionWrapper = wrapper;
-		StrutsUtils.scanClasses(ctx, "/", this);
-		createSession();
+		ClassUtils.scanClasses(ctx, "/", this);
 		registerAction(ctx.getFilterRegistration("StrutsFilter"));
 		logger.debug("Init context:" + (System.nanoTime() - start) + "ns");
-	}
-
-	private void createSession() {
-		try {
-			InputStream input = WebContextWrapper.class.getClassLoader().getResourceAsStream("jdbc.properties");
-			if (input != null) {
-				logger.debug("Find the jdbc.properties file");
-				Properties properties = new Properties();
-				properties.load(input);
-				SqlSessionBase.createSession(properties);
-			}
-		} catch (IOException | SQLException e) {
-			logger.error("Create session faild", e);
-		}
 	}
 
 	private void registerAction(FilterRegistration filterRegistration) throws ServletException {
@@ -78,9 +58,9 @@ public class WebContextWrapper implements FilterClassType {
 	@Override
 	public void filter(Class<?> clazz) {
 		if (clazz != null) {
-			if (StrutsUtils.isController(clazz)) {
+			if (ClassUtils.isController(clazz)) {
 				bindActions(clazz);
-			} else if (StrutsUtils.isFilter(clazz)) {
+			} else if (ClassUtils.isFilter(clazz)) {
 				bindFilter(clazz);
 			}
 			classes.put(clazz, null);
@@ -103,7 +83,7 @@ public class WebContextWrapper implements FilterClassType {
 		for (Method method : methods) {
 			methodReq = method.getAnnotation(Request.class);
 			if (methodReq != null) {
-				actionWrapper.put(StrutsUtils.getUrlMapping(classReq, methodReq.value()), method);
+				actionWrapper.put(ClassUtils.getUrlMapping(classReq, methodReq.value()), method);
 			}
 			startUp = method.getAnnotation(StartUp.class);
 			if (startUp != null) {
@@ -118,7 +98,6 @@ public class WebContextWrapper implements FilterClassType {
 		actionWrapper.clear();
 		actionWrapper = null;
 		filters.clear();
-		SqlSessionBase.destory();
 		logger.debug("Destroy context:" + (System.nanoTime() - start) + "ns");
 	}
 

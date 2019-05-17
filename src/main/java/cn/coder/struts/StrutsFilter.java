@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.util.ThreadEx;
-import cn.coder.struts.util.StrutsUtils;
+import cn.coder.struts.util.ClassUtils;
 import cn.coder.struts.wrapper.ActionWrapper;
 import cn.coder.struts.wrapper.ResponseWrapper;
 import cn.coder.struts.wrapper.WebContextWrapper;
@@ -49,7 +49,7 @@ public class StrutsFilter implements Filter {
 		Method method = actionWrapper.getActionMethod(req.getServletPath());
 		if (method != null) {
 			HttpServletResponse res = (HttpServletResponse) response;
-			if (!StrutsUtils.allowHttpMethod(method, req.getMethod())) {
+			if (!ClassUtils.allowHttpMethod(method, req.getMethod())) {
 				res.sendError(405, "Request method '" + req.getMethod() + "' not supported");
 				if (logger.isDebugEnabled())
 					logger.debug("{} method not allowed", req.getMethod());

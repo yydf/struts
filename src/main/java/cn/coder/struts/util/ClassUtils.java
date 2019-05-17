@@ -11,7 +11,7 @@ import cn.coder.struts.annotation.Request.HttpMethod;
 import cn.coder.struts.support.ActionIntercepter;
 import cn.coder.struts.support.ActionSupport;
 
-public class StrutsUtils {
+public class ClassUtils {
 	public static void scanClasses(ServletContext ctx, String parent, FilterClassType work) {
 		Set<String> paths = ctx.getResourcePaths(parent);
 		for (String path : paths) {

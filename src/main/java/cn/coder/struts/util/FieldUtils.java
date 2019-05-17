@@ -44,13 +44,13 @@ public class FieldUtils {
 			return value.toString();
 		case "int":
 		case "java.lang.Integer":
-			return ObjectUtils.toInteger(value);
+			return ("".equals(value) ? null : Integer.parseInt(value.toString()));
 		case "long":
 		case "java.lang.Long":
-			return ObjectUtils.toLong(value);
+			return ("".equals(value) ? null : Long.parseLong(value.toString()));
 		case "boolean":
 		case "java.lang.Boolean":
-			return ObjectUtils.toBoolean(value);
+			return ("".equals(value) ? null : Boolean.parseBoolean(value.toString()));
 		case "java.util.Date":
 			return DateEx.toDate(value);
 		default:
