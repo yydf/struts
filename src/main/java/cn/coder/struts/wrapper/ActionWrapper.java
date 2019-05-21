@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import cn.coder.struts.support.ActionSupport;
 import cn.coder.struts.util.Assert;
-import cn.coder.struts.util.FieldUtils;
+import cn.coder.struts.util.BeanUtils;
 
 public class ActionWrapper {
 
@@ -66,14 +66,14 @@ public class ActionWrapper {
 			if (obj == null) {
 				obj = clazz.newInstance();
 				classes.put(clazz, obj);
-				Set<Field> fields = FieldUtils.getDeclaredFields(clazz);
+				Set<Field> fields = BeanUtils.getDeclaredFields(clazz);
 				for (Field field : fields) {
 					if (field.getAnnotation(Resource.class) != null) {
 						Set<Class<?>> keys = classes.keySet();
 						for (Class<?> cla : keys) {
 							if (field.getType().isAssignableFrom(cla)) {
 								try {
-									FieldUtils.setValue(field, obj, createBean(cla, classes));
+									BeanUtils.setValue(field, obj, createBean(cla, classes));
 								} catch (SecurityException | SQLException e) {
 									throw new ServletException("Create bean faild", e);
 								}

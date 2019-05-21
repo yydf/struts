@@ -29,7 +29,9 @@ import cn.coder.struts.wrapper.ActionWrapper;
 import cn.coder.struts.wrapper.ResponseWrapper;
 
 /**
- * 核心控制类，包括初始化Action和注入@Resource对象
+ * 核心控制类<br>
+ * 包括初始化Action和注入@Resource对象<br>
+ * 初始化ResponseWrapper
  * 
  * @author YYDF
  *
@@ -137,6 +139,13 @@ public class StrutsFilter implements Filter {
 			logger.debug("Request finished with {}ms", (System.currentTimeMillis() - start));
 	}
 
+	/**
+	 * 判断拦截器是否通过
+	 * 
+	 * @param req
+	 * @param res
+	 * @return true通过，false不通过
+	 */
 	private boolean checkFilter(HttpServletRequest req, HttpServletResponse res) {
 		if (filters == null || filters.isEmpty())
 			return true;

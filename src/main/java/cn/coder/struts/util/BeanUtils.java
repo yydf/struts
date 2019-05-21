@@ -5,20 +5,11 @@ import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class FieldUtils {
-	private static final List<String> PRIMITIVE_TYPE = Arrays.asList("java.lang.String", "java.lang.Integer",
-			"java.lang.Long", "java.lang.Boolean");
-	private static final Pattern linePattern = Pattern.compile("_(\\w)");
+public class BeanUtils {
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	private static final HashMap<String, String> convertedNames = new HashMap<>(1024);
 
 	public static void setValue(Field field, Object obj, Object value) throws SQLException {
 		if (Modifier.isFinal(field.getModifiers()))
@@ -32,7 +23,7 @@ public class FieldUtils {
 		}
 	}
 
-	public static Object toValue(Class<?> type, Object value) throws SQLException {
+	private static Object toValue(Class<?> type, Object value) throws SQLException {
 		if (value == null)
 			return null;
 		if (value.getClass().equals(type))
@@ -72,32 +63,6 @@ public class FieldUtils {
 			}
 			getDeclaredFields(clazz.getSuperclass(), fieldList);
 		}
-	}
-
-	public static boolean isPrimitive(Class<?> target) {
-		if (target.isPrimitive())
-			return true;
-		if (PRIMITIVE_TYPE.contains(target.getName()))
-			return true;
-		return false;
-	}
-
-	public static String convert(String str) {
-		String name;
-		if (convertedNames.containsKey(str))
-			name = convertedNames.get(str);
-		else {
-			name = str.toLowerCase();
-			Matcher matcher = linePattern.matcher(name);
-			StringBuffer sb = new StringBuffer();
-			while (matcher.find()) {
-				matcher.appendReplacement(sb, matcher.group(1).toUpperCase());
-			}
-			matcher.appendTail(sb);
-			name = sb.toString();
-			convertedNames.put(str, name);
-		}
-		return name;
 	}
 
 }

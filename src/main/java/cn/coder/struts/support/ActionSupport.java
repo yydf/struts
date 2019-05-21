@@ -2,6 +2,7 @@ package cn.coder.struts.support;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -10,17 +11,25 @@ import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.util.FieldUtils;
+import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.view.MultipartFile;
-import cn.coder.struts.view.Validated;
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
 import cn.coder.struts.wrapper.MultipartRequestWrapper.processFile;
 import cn.coder.struts.wrapper.SessionWrapper;
 
+/**
+ * Action的基础类<br>
+ * 包含request和response<br>
+ * 可通过getParameter(name)获取参数值<br>
+ * 可通过getMultipartFile获取上传文件对象MultipartFile
+ * 
+ * @author YYDF
+ *
+ */
 public abstract class ActionSupport implements processFile {
 
-	static final Logger logger = LoggerFactory.getLogger(ActionSupport.class);
+	private static final Logger logger = LoggerFactory.getLogger(ActionSupport.class);
 	protected HttpServletRequest request;
 	protected HttpServletResponse response;
 	protected boolean isMultipartRequest;
@@ -32,7 +41,8 @@ public abstract class ActionSupport implements processFile {
 		if (isMultipartRequest) {
 			multipartWrapper = new MultipartRequestWrapper(request);
 			multipartWrapper.processRequest(this);
-			logger.debug("Process multipart request");
+			if (logger.isDebugEnabled())
+				logger.debug("Process multipart request");
 		}
 	}
 
@@ -79,23 +89,22 @@ public abstract class ActionSupport implements processFile {
 		return null;
 	}
 
-	protected <T> Validated getPostData(Class<T> clazz) {
-		Validated valid = new Validated();
+	protected <T> T getPostData(Class<T> clazz) {
 		try {
 			T obj = clazz.newInstance();
-			Field[] fields = clazz.getDeclaredFields();
+			Set<Field> fields = BeanUtils.getDeclaredFields(clazz);
 			String str;
 			for (Field field : fields) {
 				str = getParameter(field.getName());
 				if (str != null) {
-					FieldUtils.setValue(field, obj, str);
+					BeanUtils.setValue(field, obj, str);
 				}
 			}
-			valid.setData(obj);
+			return obj;
 		} catch (InstantiationException | IllegalAccessException | SQLException e) {
 			logger.error("getPostData faild", e);
+			return null;
 		}
-		return valid;
 	}
 
 	protected String getRemoteAddr() {

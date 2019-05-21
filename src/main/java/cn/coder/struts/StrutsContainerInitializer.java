@@ -22,6 +22,14 @@ import cn.coder.struts.util.ClassUtils.FilterClassType;
 import cn.coder.struts.wrapper.ActionWrapper;
 import cn.coder.struts.wrapper.SessionWrapper;
 
+/**
+ * 获取WebInitializer接口实现类<br>
+ * 扫描WEB-INF目录下的所有class文件<br>
+ * 查找所有的Action和Intercepter
+ * 
+ * @author YYDF 2019-05-21
+ *
+ */
 @HandlesTypes(WebInitializer.class)
 public class StrutsContainerInitializer implements ServletContainerInitializer, FilterClassType {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsContainerInitializer.class);
@@ -40,7 +48,8 @@ public class StrutsContainerInitializer implements ServletContainerInitializer, 
 		// 增加session处理类
 		ctx.addListener(SessionWrapper.class);
 		ctx.addFilter("StrutsFilter", StrutsFilter.class);
-		logger.debug("ServletContext start up:" + (System.nanoTime() - start) + "ns");
+		if (logger.isDebugEnabled())
+			logger.debug("ServletContext start up:{}ns", (System.nanoTime() - start));
 	}
 
 	@Override
@@ -64,17 +73,15 @@ public class StrutsContainerInitializer implements ServletContainerInitializer, 
 	}
 
 	private void bindActions(Class<?> clazz) {
-		Method[] methods = clazz.getDeclaredMethods();
-		Request classReq = clazz.getAnnotation(Request.class);
 		Request methodReq;
-		StartUp startUp;
+		Request classReq = clazz.getAnnotation(Request.class);
+		Method[] methods = clazz.getDeclaredMethods();
 		for (Method method : methods) {
 			methodReq = method.getAnnotation(Request.class);
 			if (methodReq != null) {
 				actionWrapper.put(ClassUtils.getUrlMapping(classReq, methodReq.value()), method);
 			}
-			startUp = method.getAnnotation(StartUp.class);
-			if (startUp != null) {
+			if (method.getAnnotation(StartUp.class) != null) {
 				actionWrapper.add(method);
 			}
 		}
