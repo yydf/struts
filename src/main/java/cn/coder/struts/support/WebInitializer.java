@@ -4,4 +4,6 @@ import javax.servlet.ServletContext;
 
 public interface WebInitializer {
 	void onStartup(ServletContext ctx);
+
+	void destroy();
 }
