@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.annotation.Request;
-import cn.coder.struts.annotation.StartUp;
+import cn.coder.struts.annotation.AutoRun;
 import cn.coder.struts.support.ActionIntercepter;
 import cn.coder.struts.support.WebInitializer;
 import cn.coder.struts.util.ClassUtils;
@@ -81,7 +81,7 @@ public class StrutsContainerInitializer implements ServletContainerInitializer, 
 			if (methodReq != null) {
 				actionWrapper.put(ClassUtils.getUrlMapping(classReq, methodReq.value()), method);
 			}
-			if (method.getAnnotation(StartUp.class) != null) {
+			if (method.getAnnotation(AutoRun.class) != null) {
 				actionWrapper.add(method);
 			}
 		}

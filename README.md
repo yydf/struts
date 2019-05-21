@@ -7,7 +7,6 @@
 特性
 -------------------------
 * 零配置
-* 高并发JDBC
 
 环境
 -------------
@@ -22,16 +21,8 @@
 <dependency>
     <groupId>cn.4coder</groupId>
     <artifactId>struts</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 </dependency>
-```
-* resources目录下添加jdbc.properties文件(用不到，可以不添加):
-```
-driverClassName =com.mysql.jdbc.Driver
-url=jdbc:mysql://localhost:3306/test
-username=test
-password=123456
-initialSize=4
 ```
 * [编码实现](https://gitee.com/yydf/easystruts-xjcy/wikis/pages)
 * [DEMO示例](https://gitee.com/yydf/easystruts-xjcy/blob/master/demo.zip)
