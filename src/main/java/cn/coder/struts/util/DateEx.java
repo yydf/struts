@@ -32,7 +32,7 @@ public class DateEx {
 	}
 
 	public static Date toDate(Object value) {
-		if (value == null)
+		if (value == null || value.toString().trim().length() == 0)
 			return null;
 		if (value instanceof Timestamp)
 			return (Date) value;

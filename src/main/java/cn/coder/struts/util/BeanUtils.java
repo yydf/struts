@@ -4,12 +4,18 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.Set;
 
 public class BeanUtils {
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private static final ThreadLocal<DateFormat> df = new ThreadLocal<DateFormat>() {
+		@Override
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		}
+	};
 
 	public static void setValue(Field field, Object obj, Object value) throws SQLException {
 		if (Modifier.isFinal(field.getModifiers()))
@@ -31,7 +37,7 @@ public class BeanUtils {
 		switch (type.getName()) {
 		case "java.lang.String":
 			if (value instanceof Timestamp)
-				return sdf.format(value);
+				return df.get().format(value);
 			return value.toString();
 		case "int":
 		case "java.lang.Integer":
@@ -42,6 +48,9 @@ public class BeanUtils {
 		case "boolean":
 		case "java.lang.Boolean":
 			return ("".equals(value) ? null : Boolean.parseBoolean(value.toString()));
+		case "double":
+		case "java.lang.Double":
+			return ("".equals(value) ? null : Double.parseDouble(value.toString()));
 		case "java.util.Date":
 			return DateEx.toDate(value);
 		default:
