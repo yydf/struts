@@ -1,7 +1,6 @@
 package cn.coder.struts.wrapper;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -50,10 +49,10 @@ public class ActionWrapper {
 		if (!this.startUpMappings.isEmpty()) {
 			Object obj;
 			for (Method method : this.startUpMappings) {
-				obj = createBean(method.getDeclaringClass(), classes);
 				try {
+					obj = createBean(method.getDeclaringClass(), classes);
 					method.invoke(obj);
-				} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				} catch (Exception e) {
 					throw new ServletException("Run startup faild", e);
 				}
 			}
@@ -100,7 +99,7 @@ public class ActionWrapper {
 			support.setRequest(req);
 			support.setResponse(res);
 			return method.invoke(support);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+		} catch (Exception e) {
 			throw new ServletException("Invoke method faild", e);
 		} finally {
 			support.clear();

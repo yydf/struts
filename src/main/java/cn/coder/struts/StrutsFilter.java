@@ -3,8 +3,11 @@ package cn.coder.struts;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.DispatcherType;
@@ -22,6 +25,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.coder.struts.annotation.Order;
 import cn.coder.struts.support.ActionIntercepter;
 import cn.coder.struts.support.WebInitializer;
 import cn.coder.struts.util.ClassUtils;
@@ -40,8 +44,8 @@ public class StrutsFilter implements Filter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
 	private ResponseWrapper wrapper;
 	private ActionWrapper actionWrapper;
-	private ArrayList<WebInitializer> initArray;
-	private ArrayList<ActionIntercepter> filters;
+	private List<WebInitializer> initArray;
+	private List<ActionIntercepter> filters;
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
@@ -53,8 +57,24 @@ public class StrutsFilter implements Filter {
 
 	@SuppressWarnings("unchecked")
 	private void initFilter(ServletContext sc) {
-		filters = (ArrayList<ActionIntercepter>) sc.getAttribute("Filters");
+		filters = (List<ActionIntercepter>) sc.getAttribute("Filters");
 		sc.removeAttribute("Filters");
+		if (filters != null && filters.size() > 1) {
+			// 按Order注解排序
+			Collections.sort(filters, new Comparator<ActionIntercepter>() {
+				@Override
+				public int compare(ActionIntercepter arg0, ActionIntercepter arg1) {
+					Integer o1 = 0, o2 = 0;
+					Order order0 = arg0.getClass().getAnnotation(Order.class);
+					if (order0 != null)
+						o1 = order0.value();
+					Order order1 = arg1.getClass().getAnnotation(Order.class);
+					if (order1 != null)
+						o2 = order1.value();
+					return o1.compareTo(o2);
+				}
+			});
+		}
 	}
 
 	@SuppressWarnings("unchecked")
