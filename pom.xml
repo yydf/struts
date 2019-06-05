@@ -8,7 +8,7 @@
 	<packaging>jar</packaging>
 
 	<name>struts</name>
-	<url>http://maven.apache.org</url>
+	<url>https://github.com/yydf</url>
 	<description>A simple, light Java WEB + ORM framework.</description>
 
 	<properties>
@@ -43,6 +43,7 @@
 		<connection>git@github.com:yydf/struts.git</connection>
 		<developerConnection>scm:git@github.com:yydf/struts.git</developerConnection>
 		<url>https://github.com/yydf/struts</url>
+		<tag>simple,light,javaweb,easy-to-use</tag>
 	</scm>
 
 	<parent>

@@ -2,10 +2,11 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/cn.4coder/struts/badge.svg)](https://maven-badges.herokuapp.com/maven-central/cn.4coder/struts/)
 [![GitHub release](https://img.shields.io/github/release/yydf/struts.svg)](https://github.com/yydf/struts/releases)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://raw.githubusercontent.com/yydf/struts/master/LICENSE)
-![Jar Size](https://img.shields.io/badge/jar--size-72k-blue.svg)
+![Jar Size](https://img.shields.io/badge/jar--size-45.2k-blue.svg)
 
 特性
 -------------------------
+* 轻量
 * 零配置
 
 环境
@@ -21,7 +22,7 @@
 <dependency>
     <groupId>cn.4coder</groupId>
     <artifactId>struts</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4</version>
 </dependency>
 ```
 * [编码实现](https://gitee.com/yydf/easystruts-xjcy/wikis/pages)
