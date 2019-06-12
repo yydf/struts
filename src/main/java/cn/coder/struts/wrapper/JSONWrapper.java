@@ -94,7 +94,6 @@ public class JSONWrapper {
 			for (Field field : fields) {
 				field.setAccessible(true);
 				obj2 = field.get(obj);
-				field.setAccessible(false);
 				if (obj2 != null)
 					map.put(field.getName(), obj2);
 			}

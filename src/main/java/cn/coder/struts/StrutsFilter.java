@@ -1,21 +1,10 @@
 package cn.coder.struts;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
 
-import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
-import javax.servlet.FilterRegistration;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -25,12 +14,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.annotation.Order;
-import cn.coder.struts.support.ActionIntercepter;
-import cn.coder.struts.support.WebInitializer;
-import cn.coder.struts.util.ClassUtils;
-import cn.coder.struts.wrapper.ActionWrapper;
-import cn.coder.struts.wrapper.ResponseWrapper;
+import cn.coder.struts.core.Action;
+import cn.coder.struts.core.ActionHandler;
+import cn.coder.struts.core.StrutsContext;
 
 /**
  * 核心控制类<br>
@@ -42,160 +28,49 @@ import cn.coder.struts.wrapper.ResponseWrapper;
  */
 public class StrutsFilter implements Filter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
-	private ResponseWrapper wrapper;
-	private ActionWrapper actionWrapper;
-	private List<WebInitializer> initArray;
-	private List<ActionIntercepter> filters;
+	private StrutsContext context = new StrutsContext();
+	private ActionHandler handler;
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		initWebInitializer(filterConfig.getServletContext());
-		initFilter(filterConfig.getServletContext());
-		initAction(filterConfig.getServletContext());
-		wrapper = new ResponseWrapper();
-	}
-
-	@SuppressWarnings("unchecked")
-	private void initFilter(ServletContext sc) {
-		filters = (List<ActionIntercepter>) sc.getAttribute("Filters");
-		sc.removeAttribute("Filters");
-		if (filters != null && filters.size() > 1) {
-			// 按Order注解排序
-			Collections.sort(filters, new Comparator<ActionIntercepter>() {
-				@Override
-				public int compare(ActionIntercepter arg0, ActionIntercepter arg1) {
-					Integer o1 = 0, o2 = 0;
-					Order order0 = arg0.getClass().getAnnotation(Order.class);
-					if (order0 != null)
-						o1 = order0.value();
-					Order order1 = arg1.getClass().getAnnotation(Order.class);
-					if (order1 != null)
-						o2 = order1.value();
-					return o1.compareTo(o2);
-				}
-			});
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private void initWebInitializer(ServletContext sc) {
-		Set<Class<?>> InitializerClasses = (Set<Class<?>>) sc.getAttribute("InitializerClasses");
-		sc.removeAttribute("InitializerClasses");
-		if (InitializerClasses != null && InitializerClasses.size() > 0) {
-			initArray = new ArrayList<>();
-			WebInitializer initObj;
-			for (Class<?> clazz : InitializerClasses) {
-				try {
-					initObj = (WebInitializer) clazz.newInstance();
-					initObj.onStartup(sc);
-					initArray.add(initObj);
-				} catch (Exception e) {
-					logger.error("WebInitializer start faild", e);
-				}
-			}
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private void initAction(ServletContext sc) throws ServletException {
-		actionWrapper = (ActionWrapper) sc.getAttribute("ActionWrapper");
-		sc.removeAttribute("ActionWrapper");
-		HashMap<Class<?>, Object> classes = (HashMap<Class<?>, Object>) sc.getAttribute("Classes");
-		sc.removeAttribute("Classes");
-		FilterRegistration filter = sc.getFilterRegistration("StrutsFilter");
-		Set<String> mappedUrls = actionWrapper.getMappedUrls();
-		if (!mappedUrls.isEmpty()) {
-			EnumSet<DispatcherType> dispatcherTypes = EnumSet.allOf(DispatcherType.class);
-			dispatcherTypes.add(DispatcherType.REQUEST);
-			dispatcherTypes.add(DispatcherType.FORWARD);
-			for (String action : mappedUrls) {
-				filter.addMappingForUrlPatterns(dispatcherTypes, true, action);
-				actionWrapper.registerBean(action, classes);
-			}
-		}
-		// 执行启动类
-		actionWrapper.runStartUp(classes);
-		// 清除缓存
-		classes.clear();
-		logger.debug("Registered actions " + mappedUrls.size());
+		context.init(filterConfig.getServletContext());
+		context.startUp();
+		handler = context.getHandler();
+		if (logger.isDebugEnabled())
+			logger.debug("Struts context started");
 	}
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
-		long start = System.currentTimeMillis();
-		request.setCharacterEncoding("utf-8");
-		response.setCharacterEncoding("utf-8");
-
 		HttpServletRequest req = (HttpServletRequest) request;
-		if (logger.isDebugEnabled())
-			logger.debug("Request [{}]{}", req.getMethod(), req.getServletPath());
-		if (req.getMethod().equals("OPTIONS")) {
-			chain.doFilter(request, response);
-			return;
-		}
 		HttpServletResponse res = (HttpServletResponse) response;
-		if (!checkFilter(req, res)) {
-			if (logger.isDebugEnabled())
-				logger.debug("Action stoped by filter");
+		req.setCharacterEncoding("UTF-8");
+		res.setCharacterEncoding("UTF-8");
+
+		if ("OPTIONS".equals(req.getMethod())) {
+			chain.doFilter(request, response);
 			return;
 		}
-		Method method = actionWrapper.getActionMethod(req.getServletPath());
-		if (method != null) {
-			if (!ClassUtils.allowHttpMethod(method, req.getMethod())) {
-				res.sendError(405, "Request method '" + req.getMethod() + "' not supported");
-				if (logger.isDebugEnabled())
-					logger.debug("{} method not allowed", req.getMethod());
-				return;
-			}
-			Object result = actionWrapper.execute(method, req, res);
-			if (result != null) {
-				wrapper.doResponse(result, req, res);
-			}
+
+		String servletPath = req.getServletPath();
+		Action action = handler.getAction(servletPath);
+		if (action != null) {
+			if (logger.isDebugEnabled())
+				logger.debug("Find the path '{}'", servletPath);
+			handler.handle(action, req, res);
 		} else {
+			if (logger.isDebugEnabled())
+				logger.debug("Not found the path '{}'", servletPath);
 			chain.doFilter(request, response);
 		}
-		if (logger.isDebugEnabled())
-			logger.debug("Request finished with {}ms", (System.currentTimeMillis() - start));
-	}
-
-	/**
-	 * 判断拦截器是否通过
-	 * 
-	 * @param req
-	 * @param res
-	 * @return true通过，false不通过
-	 */
-	private boolean checkFilter(HttpServletRequest req, HttpServletResponse res) {
-		if (filters == null || filters.isEmpty())
-			return true;
-		for (ActionIntercepter intercepter : filters) {
-			if (!intercepter.intercept(req, res))
-				return false;
-		}
-		return true;
 	}
 
 	@Override
 	public void destroy() {
-		if (actionWrapper != null) {
-			actionWrapper.clear();
-			actionWrapper = null;
-		}
-		if (initArray != null) {
-			for (WebInitializer webInitializer : initArray) {
-				try {
-					webInitializer.destroy();
-				} catch (Exception e) {
-					logger.error("WebInitializer destroy faild", e);
-				}
-			}
-		}
-		if (filters != null) {
-			filters.clear();
-			filters = null;
-		}
-		wrapper = null;
+		context.destroy();
+		if (logger.isDebugEnabled())
+			logger.debug("Struts context destroied");
 	}
 
 }

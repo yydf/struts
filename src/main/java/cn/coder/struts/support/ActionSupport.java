@@ -35,8 +35,9 @@ public abstract class ActionSupport implements processFile {
 	protected boolean isMultipartRequest;
 	private MultipartRequestWrapper multipartWrapper;
 
-	public void setRequest(HttpServletRequest req2) {
+	public void init(HttpServletRequest req2, HttpServletResponse res2) {
 		this.request = req2;
+		this.response = res2;
 		this.isMultipartRequest = ServletFileUpload.isMultipartContent(request);
 		if (isMultipartRequest) {
 			multipartWrapper = new MultipartRequestWrapper(request);
@@ -44,10 +45,6 @@ public abstract class ActionSupport implements processFile {
 			if (logger.isDebugEnabled())
 				logger.debug("Process multipart request");
 		}
-	}
-
-	public void setResponse(HttpServletResponse res2) {
-		this.response = res2;
 	}
 
 	protected HttpServletRequest getRequest() {

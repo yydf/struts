@@ -1,109 +1,33 @@
 package cn.coder.struts.wrapper;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
 
-import javax.annotation.Resource;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import cn.coder.struts.support.ActionSupport;
-import cn.coder.struts.util.Assert;
-import cn.coder.struts.util.BeanUtils;
+import cn.coder.struts.annotation.Request;
+import cn.coder.struts.core.Action;
+import cn.coder.struts.util.ClassUtils;
 
 public class ActionWrapper {
+	private HashMap<String, Action> mappings = new HashMap<>();
 
-	private final ArrayList<Method> startUpMappings = new ArrayList<>();
-	private final HashMap<String, Method> urlMappings = new HashMap<>();
-	private final HashMap<Method, ActionSupport> cachedBeans = new HashMap<>();
-
-	public void put(String urlMapping, Method method) {
-		this.urlMappings.put(urlMapping, method);
-	}
-
-	public void add(Method method) {
-		this.startUpMappings.add(method);
-	}
-
-	public synchronized void clear() {
-		startUpMappings.clear();
-		urlMappings.clear();
-		cachedBeans.clear();
-	}
-
-	public Set<String> getMappedUrls() {
-		return urlMappings.keySet();
-	}
-
-	public void registerBean(String action, HashMap<Class<?>, Object> classes) throws ServletException {
-		Method method = urlMappings.get(action);
-		cachedBeans.put(method, (ActionSupport) createBean(method.getDeclaringClass(), classes));
-	}
-
-	public void runStartUp(HashMap<Class<?>, Object> classes) throws ServletException {
-		if (!this.startUpMappings.isEmpty()) {
-			Object obj;
-			for (Method method : this.startUpMappings) {
-				try {
-					obj = createBean(method.getDeclaringClass(), classes);
-					method.invoke(obj);
-				} catch (Exception e) {
-					throw new ServletException("Run startup faild", e);
-				}
+	public void bindActions(Class<?> clazz) {
+		Request methodReq;
+		Request classReq = clazz.getAnnotation(Request.class);
+		Method[] methods = clazz.getDeclaredMethods();
+		for (Method method : methods) {
+			methodReq = method.getAnnotation(Request.class);
+			if (methodReq != null) {
+				add(ClassUtils.getUrlMapping(classReq, methodReq.value()), method);
 			}
 		}
 	}
 
-	private synchronized Object createBean(Class<?> clazz, HashMap<Class<?>, Object> classes) throws ServletException {
-		try {
-			Object obj = classes.get(clazz);
-			if (obj == null) {
-				obj = clazz.newInstance();
-				classes.put(clazz, obj);
-				Set<Field> fields = BeanUtils.getDeclaredFields(clazz);
-				for (Field field : fields) {
-					if (field.getAnnotation(Resource.class) != null) {
-						Set<Class<?>> keys = classes.keySet();
-						for (Class<?> cla : keys) {
-							if (field.getType().isAssignableFrom(cla)) {
-								try {
-									BeanUtils.setValue(field, obj, createBean(cla, classes));
-								} catch (SecurityException | SQLException e) {
-									throw new ServletException("Create bean faild", e);
-								}
-								break;
-							}
-						}
-					}
-				}
-			}
-			return obj;
-		} catch (InstantiationException | IllegalAccessException e) {
-			throw new ServletException("Create controller faild", e);
-		}
+	private void add(String urlMapping, Method method) {
+		mappings.put(urlMapping, new Action(method));
 	}
 
-	public Method getActionMethod(String servletPath) {
-		return urlMappings.get(servletPath);
-	}
-
-	public Object execute(Method method, HttpServletRequest req, HttpServletResponse res) throws ServletException {
-		ActionSupport support = cachedBeans.get(method);
-		Assert.notNull(support, "controller");
-		try {
-			support.setRequest(req);
-			support.setResponse(res);
-			return method.invoke(support);
-		} catch (Exception e) {
-			throw new ServletException("Invoke method faild", e);
-		} finally {
-			support.clear();
-		}
+	public Action getAction(String path) {
+		return mappings.get(path);
 	}
 
 }

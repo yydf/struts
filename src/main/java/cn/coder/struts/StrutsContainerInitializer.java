@@ -1,8 +1,6 @@
 package cn.coder.struts;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Set;
 
 import javax.servlet.ServletContainerInitializer;
@@ -13,8 +11,6 @@ import javax.servlet.annotation.HandlesTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.annotation.Request;
-import cn.coder.struts.annotation.AutoRun;
 import cn.coder.struts.support.ActionIntercepter;
 import cn.coder.struts.support.WebInitializer;
 import cn.coder.struts.util.ClassUtils;
@@ -34,7 +30,7 @@ import cn.coder.struts.wrapper.SessionWrapper;
 public class StrutsContainerInitializer implements ServletContainerInitializer, FilterClassType {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsContainerInitializer.class);
 	private final ActionWrapper actionWrapper = new ActionWrapper();
-	private final HashMap<Class<?>, Object> classes = new HashMap<>();
+	private final ArrayList<Class<?>> classes = new ArrayList<>();
 	private final ArrayList<ActionIntercepter> filters = new ArrayList<>();
 
 	public void onStartup(Set<Class<?>> initializerClasses, ServletContext ctx) throws ServletException {
@@ -56,11 +52,11 @@ public class StrutsContainerInitializer implements ServletContainerInitializer, 
 	public void filter(Class<?> clazz) {
 		if (clazz != null) {
 			if (ClassUtils.isController(clazz)) {
-				bindActions(clazz);
+				actionWrapper.bindActions(clazz);
 			} else if (ClassUtils.isFilter(clazz)) {
 				bindFilter(clazz);
 			}
-			classes.put(clazz, null);
+			classes.add(clazz);
 		}
 	}
 
@@ -72,18 +68,4 @@ public class StrutsContainerInitializer implements ServletContainerInitializer, 
 		}
 	}
 
-	private void bindActions(Class<?> clazz) {
-		Request methodReq;
-		Request classReq = clazz.getAnnotation(Request.class);
-		Method[] methods = clazz.getDeclaredMethods();
-		for (Method method : methods) {
-			methodReq = method.getAnnotation(Request.class);
-			if (methodReq != null) {
-				actionWrapper.put(ClassUtils.getUrlMapping(classReq, methodReq.value()), method);
-			}
-			if (method.getAnnotation(AutoRun.class) != null) {
-				actionWrapper.add(method);
-			}
-		}
-	}
 }

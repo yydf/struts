@@ -6,10 +6,12 @@ import java.util.Set;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import cn.coder.struts.annotation.Before;
 import cn.coder.struts.annotation.Request;
 import cn.coder.struts.annotation.Request.HttpMethod;
 import cn.coder.struts.support.ActionIntercepter;
 import cn.coder.struts.support.ActionSupport;
+import cn.coder.struts.support.DataValidator;
 
 public class ClassUtils {
 	public static void scanClasses(ServletContext ctx, String parent, FilterClassType work) {
@@ -53,7 +55,7 @@ public class ClassUtils {
 		return encoding != null && encoding.indexOf("gzip") > -1;
 	}
 
-	public static boolean allowHttpMethod(Method method, String httpMethod) {
+	public static boolean allowedHttpMethod(Method method, String httpMethod) {
 		Request req = method.getAnnotation(Request.class);
 		if (req == null)
 			return true;
@@ -64,6 +66,13 @@ public class ClassUtils {
 
 	public static boolean isFilter(Class<?> clazz) {
 		return ActionIntercepter.class.isAssignableFrom(clazz);
+	}
+
+	public static Class<?> getValidator(Method method) {
+		Before clazz = method.getAnnotation(Before.class);
+		if (clazz != null && DataValidator.class.isAssignableFrom(clazz.value()))
+			return clazz.value();
+		return null;
 	}
 
 	public interface FilterClassType {

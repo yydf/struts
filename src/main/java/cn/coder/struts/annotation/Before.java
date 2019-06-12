@@ -1,19 +1,17 @@
 package cn.coder.struts.annotation;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-import java.lang.annotation.ElementType;
-
-/**
- * 程序起动后自动执行
- * 
- * @author YYDF
- *
- */
+@Documented
 @Retention(RUNTIME)
 @Target(value = { ElementType.TYPE, ElementType.METHOD })
-public @interface AutoRun {
+public @interface Before {
+
+	Class<?> value();
 
 }
