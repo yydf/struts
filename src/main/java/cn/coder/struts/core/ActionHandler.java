@@ -21,10 +21,10 @@ public final class ActionHandler {
 	private static final Logger logger = LoggerFactory.getLogger(ActionHandler.class);
 	private final ActionWrapper wrapper;
 	private final ResponseWrapper responseWrapper;
-	private final ArrayList<ActionIntercepter> filters;
+	private final ArrayList<Class<?>> filters;
 	private final boolean hasFilter;
 
-	public ActionHandler(ActionWrapper actionWrapper, ArrayList<ActionIntercepter> filterArray) {
+	public ActionHandler(ActionWrapper actionWrapper, ArrayList<Class<?>> filterArray) {
 		this.wrapper = actionWrapper;
 		this.responseWrapper = new ResponseWrapper();
 		this.filters = filterArray;
@@ -36,18 +36,20 @@ public final class ActionHandler {
 	}
 
 	public void handle(Action action, HttpServletRequest req, HttpServletResponse res) {
+		long start = System.currentTimeMillis();
 		if (!checkMethod(action, req, res))
 			return;
 		if (!checkFilter(req, res))
 			return;
 		handleAction(action, req, res);
+		if (logger.isDebugEnabled())
+			logger.debug("Action finished with {} ms", (System.currentTimeMillis() - start));
 	}
 
 	private void handleAction(Action action, HttpServletRequest req, HttpServletResponse res) {
 		ActionSupport support = null;
 		try {
-			Class<?> controller = action.getController();
-			support = (ActionSupport) Aop.create(controller);
+			support = (ActionSupport) Aop.create(action.getController());
 			support.init(req, res);
 			Object result = action.invoke(support);
 			if (result != null) {
@@ -66,9 +68,10 @@ public final class ActionHandler {
 
 	private boolean checkFilter(HttpServletRequest req, HttpServletResponse res) {
 		if (hasFilter) {
-			for (ActionIntercepter filter : filters) {
-				Aop.inject(filter);
-				if (!filter.intercept(req, res)) {
+			ActionIntercepter inter;
+			for (Class<?> filter : filters) {
+				inter = (ActionIntercepter) Aop.create(filter);
+				if (!inter.intercept(req, res)) {
 					if (logger.isDebugEnabled())
 						logger.debug("Action stoped by filter '{}'", filter.getClass().getName());
 					return false;
@@ -92,5 +95,12 @@ public final class ActionHandler {
 			return false;
 		}
 		return true;
+	}
+
+	public synchronized void clear() {
+		if (filters != null)
+			filters.clear();
+		if (wrapper != null)
+			wrapper.clear();
 	}
 }

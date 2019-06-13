@@ -43,6 +43,7 @@ public class ClassUtils {
 	}
 
 	public static String getUrlMapping(Request classReq, String path) {
+		// 如果以~开始，则视为根目录
 		if (path.startsWith("~"))
 			return path.substring(1);
 		if (classReq != null)

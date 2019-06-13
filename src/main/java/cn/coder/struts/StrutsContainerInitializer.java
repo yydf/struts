@@ -11,7 +11,6 @@ import javax.servlet.annotation.HandlesTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.support.ActionIntercepter;
 import cn.coder.struts.support.WebInitializer;
 import cn.coder.struts.util.ClassUtils;
 import cn.coder.struts.util.ClassUtils.FilterClassType;
@@ -31,15 +30,15 @@ public class StrutsContainerInitializer implements ServletContainerInitializer, 
 	private static final Logger logger = LoggerFactory.getLogger(StrutsContainerInitializer.class);
 	private final ActionWrapper actionWrapper = new ActionWrapper();
 	private final ArrayList<Class<?>> classes = new ArrayList<>();
-	private final ArrayList<ActionIntercepter> filters = new ArrayList<>();
+	private final ArrayList<Class<?>> filters = new ArrayList<>();
 
-	public void onStartup(Set<Class<?>> initializerClasses, ServletContext ctx) throws ServletException {
+	public void onStartup(Set<Class<?>> initClasses, ServletContext ctx) throws ServletException {
 		long start = System.nanoTime();
 		ClassUtils.scanClasses(ctx, "/", this);
 		ctx.setAttribute("ActionWrapper", actionWrapper);
 		ctx.setAttribute("Classes", classes);
 		ctx.setAttribute("Filters", filters);
-		ctx.setAttribute("InitializerClasses", initializerClasses);
+		ctx.setAttribute("InitClasses", new ArrayList<>(initClasses));
 
 		// 增加session处理类
 		ctx.addListener(SessionWrapper.class);
@@ -54,18 +53,9 @@ public class StrutsContainerInitializer implements ServletContainerInitializer, 
 			if (ClassUtils.isController(clazz)) {
 				actionWrapper.bindActions(clazz);
 			} else if (ClassUtils.isFilter(clazz)) {
-				bindFilter(clazz);
+				filters.add(clazz);
 			}
 			classes.add(clazz);
 		}
 	}
-
-	private void bindFilter(Class<?> clazz) {
-		try {
-			filters.add((ActionIntercepter) clazz.newInstance());
-		} catch (InstantiationException | IllegalAccessException e) {
-			logger.error("Instance intercepter faild", e);
-		}
-	}
-
 }

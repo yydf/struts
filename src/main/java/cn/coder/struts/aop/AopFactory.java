@@ -17,6 +17,7 @@ public final class AopFactory {
 	private static final Logger logger = LoggerFactory.getLogger(AopFactory.class);
 	private static ArrayList<Class<?>> allClasses;
 	private HashMap<Field, Class<?>> maps = new HashMap<>();
+	private ArrayList<Class<?>> noInject = new ArrayList<>();
 
 	public static void init(ArrayList<Class<?>> classes) {
 		allClasses = classes;
@@ -37,7 +38,11 @@ public final class AopFactory {
 	public void inject(Object obj) {
 		if (obj == null)
 			return;
-		Set<Field> fields = BeanUtils.getDeclaredFields(obj.getClass());
+		Class<?> clazz = obj.getClass();
+		if (noInject.contains(clazz))
+			return;
+		Set<Field> fields = BeanUtils.getDeclaredFields(clazz);
+		int hasInject = 0;
 		for (Field field : fields) {
 			if (field.getAnnotation(Resource.class) != null) {
 				Class<?> target = maps.get(field);
@@ -47,7 +52,12 @@ public final class AopFactory {
 				} else {
 					injectBean(field, obj, create(target));
 				}
+				hasInject++;
 			}
+		}
+		// 将没有Resource注解的对象存入缓存
+		if (hasInject == 0) {
+			noInject.add(clazz);
 		}
 	}
 

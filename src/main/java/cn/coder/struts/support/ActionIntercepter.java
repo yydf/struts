@@ -3,6 +3,12 @@ package cn.coder.struts.support;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * 全局拦截器，会在所有的Action执行之前运行
+ * 
+ * @author YYDF
+ *
+ */
 public abstract class ActionIntercepter {
 	/**
 	 * 请求拦截器
