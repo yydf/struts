@@ -81,4 +81,13 @@ public final class AopFactory {
 		}
 	}
 
+	public void clear() {
+		maps.clear();
+		noInject.clear();
+		if (allClasses != null) {
+			allClasses.clear();
+			allClasses = null;
+		}
+	}
+
 }

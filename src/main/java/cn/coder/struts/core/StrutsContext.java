@@ -82,8 +82,13 @@ public final class StrutsContext {
 	public synchronized void startUp() {
 		if (initArray != null) {
 			for (WebInitializer init : initArray) {
-				Aop.inject(init);
-				init.onStartup(sc);
+				try {
+					Aop.inject(init);
+					init.onStartup(sc);
+				} catch (Exception e) {
+					if (logger.isErrorEnabled())
+						logger.error("WebInitializer start faild", e);
+				}
 			}
 		}
 	}
@@ -95,10 +100,16 @@ public final class StrutsContext {
 	public synchronized void destroy() {
 		if (initArray != null) {
 			for (WebInitializer init : initArray) {
-				init.destroy();
+				try {
+					init.destroy();
+				} catch (Exception e) {
+					if (logger.isErrorEnabled())
+						logger.error("WebInitializer destroy faild", e);
+				}
 			}
 			initArray.clear();
 		}
+		Aop.clear();
 		this.sc = null;
 		this.handler.clear();
 		this.handler = null;

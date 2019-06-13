@@ -6,6 +6,7 @@ public final class Aop {
 
 	/**
 	 * 创建一个对象
+	 * 
 	 * @param controller
 	 * @return
 	 */
@@ -15,10 +16,18 @@ public final class Aop {
 
 	/**
 	 * 注入存在Resource注解的对象
+	 * 
 	 * @param obj
 	 */
 	public static void inject(Object obj) {
 		factory.inject(obj);
+	}
+
+	/**
+	 * 清空缓存
+	 */
+	public static void clear() {
+		factory.clear();
 	}
 
 }

@@ -33,11 +33,12 @@ public class StrutsFilter implements Filter {
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
+		long start = System.currentTimeMillis();
 		context.init(filterConfig.getServletContext());
 		context.startUp();
 		handler = context.getHandler();
 		if (logger.isDebugEnabled())
-			logger.debug("Struts context started");
+			logger.debug("Struts context started with {} ms", (System.currentTimeMillis() - start));
 	}
 
 	@Override
