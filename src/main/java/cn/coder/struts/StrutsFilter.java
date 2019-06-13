@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -34,8 +35,9 @@ public class StrutsFilter implements Filter {
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 		long start = System.currentTimeMillis();
-		context.init(filterConfig.getServletContext());
-		context.startUp();
+		ServletContext servletContext = filterConfig.getServletContext();
+		context.init(servletContext);
+		context.startUp(servletContext);
 		handler = context.getHandler();
 		if (logger.isDebugEnabled())
 			logger.debug("Struts context started with {} ms", (System.currentTimeMillis() - start));

@@ -1,9 +1,7 @@
 package cn.coder.struts.core;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 
-import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
 
 import org.slf4j.Logger;
@@ -23,33 +21,23 @@ import cn.coder.struts.wrapper.OrderWrapper;
  */
 public final class StrutsContext {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsContext.class);
-	private ServletContext sc;
 	private ActionHandler handler;
 	private ArrayList<WebInitializer> initArray;
 
 	public synchronized void init(ServletContext servletContext) {
-		this.sc = servletContext;
-		initAopFactory();
-		addMapping();
-		initWebInitializer();
-		initActionHandler();
+		initAopFactory(servletContext);
+		initWebInitializer(servletContext);
+		initActionHandler(servletContext);
 	}
 
-	private void addMapping() {
-		EnumSet<DispatcherType> dispatcherTypes = EnumSet.allOf(DispatcherType.class);
-		dispatcherTypes.add(DispatcherType.REQUEST);
-		dispatcherTypes.add(DispatcherType.FORWARD);
-		sc.getFilterRegistration("StrutsFilter").addMappingForUrlPatterns(dispatcherTypes, true, "/*");
-	}
-
-	private void initAopFactory() {
+	private void initAopFactory(ServletContext sc) {
 		@SuppressWarnings("unchecked")
 		ArrayList<Class<?>> classes = (ArrayList<Class<?>>) sc.getAttribute("Classes");
 		sc.removeAttribute("Classes");
 		AopFactory.init(classes);
 	}
 
-	private void initWebInitializer() {
+	private void initWebInitializer(ServletContext sc) {
 		@SuppressWarnings("unchecked")
 		ArrayList<Class<?>> initClasses = (ArrayList<Class<?>>) sc.getAttribute("InitClasses");
 		sc.removeAttribute("InitClasses");
@@ -68,7 +56,7 @@ public final class StrutsContext {
 		}
 	}
 
-	private void initActionHandler() {
+	private void initActionHandler(ServletContext sc) {
 		@SuppressWarnings("unchecked")
 		ArrayList<Class<?>> filters = (ArrayList<Class<?>>) sc.getAttribute("Filters");
 		sc.removeAttribute("Filters");
@@ -79,12 +67,12 @@ public final class StrutsContext {
 		this.handler = new ActionHandler(actionWrapper, filters);
 	}
 
-	public synchronized void startUp() {
+	public synchronized void startUp(ServletContext servletContext) {
 		if (initArray != null) {
 			for (WebInitializer init : initArray) {
 				try {
 					Aop.inject(init);
-					init.onStartup(sc);
+					init.onStartup(servletContext);
 				} catch (Exception e) {
 					if (logger.isErrorEnabled())
 						logger.error("WebInitializer start faild", e);
@@ -110,7 +98,6 @@ public final class StrutsContext {
 			initArray.clear();
 		}
 		Aop.clear();
-		this.sc = null;
 		this.handler.clear();
 		this.handler = null;
 	}

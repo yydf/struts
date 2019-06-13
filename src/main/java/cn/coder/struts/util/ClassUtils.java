@@ -12,6 +12,7 @@ import cn.coder.struts.annotation.Request.HttpMethod;
 import cn.coder.struts.support.ActionIntercepter;
 import cn.coder.struts.support.ActionSupport;
 import cn.coder.struts.support.DataValidator;
+import cn.coder.struts.support.WebInitializer;
 
 public class ClassUtils {
 	public static void scanClasses(ServletContext ctx, String parent, FilterClassType work) {
@@ -38,10 +39,6 @@ public class ClassUtils {
 		}
 	}
 
-	public static boolean isController(Class<?> clazz) {
-		return ActionSupport.class.isAssignableFrom(clazz);
-	}
-
 	public static String getUrlMapping(Request classReq, String path) {
 		// 如果以~开始，则视为根目录
 		if (path.startsWith("~"))
@@ -63,6 +60,14 @@ public class ClassUtils {
 		if (req.method() == HttpMethod.ALL)
 			return true;
 		return req.method().name().equals(httpMethod);
+	}
+
+	public static boolean isWebInitializer(Class<?> clazz) {
+		return WebInitializer.class.isAssignableFrom(clazz);
+	}
+
+	public static boolean isController(Class<?> clazz) {
+		return ActionSupport.class.isAssignableFrom(clazz);
 	}
 
 	public static boolean isFilter(Class<?> clazz) {
