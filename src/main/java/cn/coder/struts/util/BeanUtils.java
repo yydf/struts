@@ -2,7 +2,6 @@ package cn.coder.struts.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -20,7 +19,7 @@ public class BeanUtils {
 
 	private static final HashMap<Class<?>, Set<Field>> fieldMappings = new HashMap<>();
 
-	public static void setValue(Field field, Object obj, Object value) throws SQLException {
+	public static void setValue(Field field, Object obj, Object value) {
 		if (Modifier.isFinal(field.getModifiers()))
 			return;
 		try {
@@ -28,11 +27,11 @@ public class BeanUtils {
 				field.setAccessible(true);
 			field.set(obj, toValue(field.getType(), value));
 		} catch (IllegalArgumentException | IllegalAccessException e) {
-			throw new SQLException("Set value faild", e);
+			throw new RuntimeException("Set value faild", e);
 		}
 	}
 
-	private static Object toValue(Class<?> type, Object value) throws SQLException {
+	private static Object toValue(Class<?> type, Object value) {
 		if (value == null)
 			return null;
 		if (value.getClass().equals(type))
@@ -54,10 +53,13 @@ public class BeanUtils {
 		case "double":
 		case "java.lang.Double":
 			return ("".equals(value) ? null : Double.parseDouble(value.toString()));
+		case "float":
+		case "java.lang.Float":
+			return ("".equals(value) ? null : Float.parseFloat(value.toString()));
 		case "java.util.Date":
 			return DateEx.toDate(value);
 		default:
-			throw new SQLException("Unkonwn field type " + type.getName());
+			throw new RuntimeException("Unkonwn field type " + type.getName());
 		}
 	}
 

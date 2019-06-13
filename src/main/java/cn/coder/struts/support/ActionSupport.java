@@ -1,7 +1,6 @@
 package cn.coder.struts.support;
 
 import java.lang.reflect.Field;
-import java.sql.SQLException;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -98,8 +97,9 @@ public abstract class ActionSupport implements processFile {
 				}
 			}
 			return obj;
-		} catch (InstantiationException | IllegalAccessException | SQLException e) {
-			logger.error("getPostData faild", e);
+		} catch (InstantiationException | IllegalAccessException e) {
+			if (logger.isErrorEnabled())
+				logger.error("getPostData faild", e);
 			return null;
 		}
 	}

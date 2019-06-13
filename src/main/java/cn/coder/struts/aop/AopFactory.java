@@ -1,7 +1,6 @@
 package cn.coder.struts.aop;
 
 import java.lang.reflect.Field;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -72,13 +71,9 @@ public final class AopFactory {
 	}
 
 	private static void injectBean(Field field, Object obj, Object target) {
-		try {
-			BeanUtils.setValue(field, obj, target);
-			if (logger.isDebugEnabled())
-				logger.debug("Finished inject bean '{}'", field.getType().getName());
-		} catch (SecurityException | SQLException e) {
-			throw new RuntimeException("Inject bean '" + field.getType().getName() + "' faild", e);
-		}
+		BeanUtils.setValue(field, obj, target);
+		if (logger.isDebugEnabled())
+			logger.debug("Finished inject bean '{}'", field.getType().getName());
 	}
 
 	public void clear() {

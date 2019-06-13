@@ -3,14 +3,29 @@ package cn.coder.struts.wrapper;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import cn.coder.struts.util.BeanUtils;
 
 public class JSONWrapper {
+	private static final Logger logger = LoggerFactory.getLogger(JSONWrapper.class);
+	private static final ThreadLocal<DateFormat> sdf = new ThreadLocal<DateFormat>() {
+		@Override
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		}
+	};
+
 	private static final String COMMA = ",";
 	private static final String MARKS = "\"";
 	private static final String COLON = ":";
@@ -19,8 +34,8 @@ public class JSONWrapper {
 	private static final String BRACE_LEFT = "{";
 	private static final String BRACE_RIGHT = "}";
 	private static final String STR_VERSION_UID = "serialVersionUID";
-	private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	final StringBuilder json = new StringBuilder();
+
+	private final StringBuilder json = new StringBuilder();
 
 	public String write(Map<String, Object> jsonMap) {
 		try {
@@ -66,7 +81,7 @@ public class JSONWrapper {
 	}
 
 	private void appendDate(Object obj) {
-		json.append(MARKS).append(sdf.format((Date) obj)).append(MARKS);
+		json.append(MARKS).append(sdf.get().format(obj)).append(MARKS);
 	}
 
 	private boolean isDate(Object obj) {
@@ -89,16 +104,18 @@ public class JSONWrapper {
 	private static Map<String, Object> getBeanValue(Object obj) {
 		HashMap<String, Object> map = new HashMap<>();
 		try {
-			Field[] fields = obj.getClass().getDeclaredFields();
+			Set<Field> fields = BeanUtils.getDeclaredFields(obj.getClass());
 			Object obj2;
 			for (Field field : fields) {
-				field.setAccessible(true);
+				if (!field.isAccessible())
+					field.setAccessible(true);
 				obj2 = field.get(obj);
 				if (obj2 != null)
 					map.put(field.getName(), obj2);
 			}
 		} catch (IllegalArgumentException | IllegalAccessException e) {
-			// logger.error("getBeanValue faild", e);
+			if (logger.isErrorEnabled())
+				logger.error("Fetch bean value faild", e);
 		}
 		return map;
 	}
@@ -160,7 +177,7 @@ public class JSONWrapper {
 	}
 
 	private static boolean isString(Object obj) {
-		return obj instanceof CharSequence || obj instanceof Character;
+		return obj instanceof CharSequence || obj instanceof Character || obj instanceof String;
 	}
 
 	private static boolean isNumber(Object obj) {
