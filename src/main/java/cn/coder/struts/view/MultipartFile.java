@@ -1,15 +1,18 @@
 package cn.coder.struts.view;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.tomcat.util.http.fileupload.FileItemStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.util.FileUtils;
 import cn.coder.struts.util.StringUtils;
 
 public class MultipartFile {
+	private static final Logger logger = LoggerFactory.getLogger(MultipartFile.class);
 
 	private String fileName;
 	private String extension;
@@ -43,7 +46,33 @@ public class MultipartFile {
 	public boolean transferTo(File dest) {
 		if (this.inputStream == null)
 			return false;
-		return FileUtils.saveFile(dest, this.inputStream);
+		FileOutputStream fos = null;
+		try {
+			if (!dest.getParentFile().exists())
+				dest.getParentFile().mkdirs();
+			fos = new FileOutputStream(dest);
+			byte[] buffer = new byte[102400];
+			int n = 0;
+			while ((n = inputStream.read(buffer)) > 0) {
+				fos.write(buffer, 0, n);
+			}
+			return true;
+		} catch (IOException e) {
+			if (logger.isErrorEnabled())
+				logger.error("Save file faild", e);
+			return false;
+		} finally {
+			// 关闭输输出流
+			if (fos != null) {
+				try {
+					inputStream.close();
+					fos.close();
+				} catch (IOException e) {
+					if (logger.isErrorEnabled())
+						logger.error("FileOutputStream close faild", e);
+				}
+			}
+		}
 	}
 
 	public String getFieldName() {

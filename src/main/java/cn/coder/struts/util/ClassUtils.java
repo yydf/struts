@@ -6,6 +6,9 @@ import java.util.Set;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cn.coder.struts.annotation.Before;
 import cn.coder.struts.annotation.Request;
 import cn.coder.struts.annotation.Request.HttpMethod;
@@ -15,6 +18,8 @@ import cn.coder.struts.support.DataValidator;
 import cn.coder.struts.support.WebInitializer;
 
 public class ClassUtils {
+	private static final Logger logger = LoggerFactory.getLogger(ClassUtils.class);
+
 	public static void scanClasses(ServletContext ctx, String parent, FilterClassType work) {
 		Set<String> paths = ctx.getResourcePaths(parent);
 		for (String path : paths) {
@@ -35,6 +40,8 @@ public class ClassUtils {
 		try {
 			return Class.forName(path);
 		} catch (ClassNotFoundException e) {
+			if (logger.isErrorEnabled())
+				logger.error("Class not fund '{}'", path, e);
 			return null;
 		}
 	}
@@ -57,7 +64,7 @@ public class ClassUtils {
 		Request req = method.getAnnotation(Request.class);
 		if (req == null)
 			return true;
-		if (req.method() == HttpMethod.ALL)
+		if (req.method().equals(HttpMethod.ALL))
 			return true;
 		return req.method().name().equals(httpMethod);
 	}

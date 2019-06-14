@@ -16,7 +16,8 @@ public class StringUtils {
 	}
 
 	public static String padLeft(Object orgin, String str, int len) {
-		Assert.notNull(orgin, "orgin string");
+		if (orgin == null)
+			return null;
 		int length = orgin.toString().length();
 		int remaining = len - length;
 		if (remaining > 0) {

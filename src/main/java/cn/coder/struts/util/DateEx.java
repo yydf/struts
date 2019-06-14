@@ -1,6 +1,5 @@
 package cn.coder.struts.util;
 
-import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 //import java.util.Calendar;
@@ -32,14 +31,14 @@ public class DateEx {
 	}
 
 	public static Date toDate(Object value) {
-		if (value == null || value.toString().trim().length() == 0)
+		if (StringUtils.isEmpty(value))
 			return null;
-		if (value instanceof Timestamp)
+		if (value instanceof Date)
 			return (Date) value;
 		int len = value.toString().length();
 		String format;
 		if (len == 8)
-			format = "yyyyMMdd";
+			format = (value.toString().indexOf(":") != -1) ? "HH:mm:ss" : "yyyyMMdd";
 		else if (len == 10)
 			format = "yyyy-MM-dd";
 		else if (len == 14)
@@ -56,7 +55,8 @@ public class DateEx {
 			SimpleDateFormat sdf = new SimpleDateFormat(format);
 			return sdf.parse(str);
 		} catch (ParseException e) {
-			logger.error("Parse date faild", e);
+			if (logger.isErrorEnabled())
+				logger.error("Parse date '{}' faild", str, e);
 			return null;
 		}
 	}
