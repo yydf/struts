@@ -5,11 +5,13 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 
 @Retention(RUNTIME)
+@Inherited
 @Target(ElementType.TYPE)
 public @interface Order {
-	
+
 	int value() default 0;// 排序号，越小越靠前
-	
+
 }

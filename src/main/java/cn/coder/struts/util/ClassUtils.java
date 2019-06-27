@@ -1,6 +1,5 @@
 package cn.coder.struts.util;
 
-import java.lang.reflect.Method;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -9,13 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.annotation.Before;
 import cn.coder.struts.annotation.Request;
-import cn.coder.struts.annotation.Request.HttpMethod;
-import cn.coder.struts.support.ActionIntercepter;
-import cn.coder.struts.support.ActionSupport;
-import cn.coder.struts.support.DataValidator;
-import cn.coder.struts.support.WebInitializer;
 
 public class ClassUtils {
 	private static final Logger logger = LoggerFactory.getLogger(ClassUtils.class);
@@ -46,46 +39,20 @@ public class ClassUtils {
 		}
 	}
 
-	public static String getUrlMapping(Request classReq, String path) {
-		// 如果以~开始，则视为根目录
-		if (path.startsWith("~"))
-			return path.substring(1);
-		if (classReq != null)
-			return classReq.value() + path;
-		return path;
-	}
-
 	public static boolean isSupportGZip(HttpServletRequest req) {
 		String encoding = req.getHeader("Accept-Encoding");
 		return encoding != null && encoding.indexOf("gzip") > -1;
 	}
 
-	public static boolean allowedHttpMethod(Method method, String httpMethod) {
-		Request req = method.getAnnotation(Request.class);
-		if (req == null)
-			return true;
-		if (req.method().equals(HttpMethod.ALL))
-			return true;
-		return req.method().name().equals(httpMethod);
-	}
+	public static String getUrlMapping(Request classReq, String path) {
+		// 如果以~开始，则视为根目录
+		if (path.startsWith("~"))
+			return path.substring(1);
+		path = path.startsWith("/") ? path : (path + "/");
+		if (classReq != null)
+			return classReq.value() + path;
+		return path;
 
-	public static boolean isWebInitializer(Class<?> clazz) {
-		return WebInitializer.class.isAssignableFrom(clazz);
-	}
-
-	public static boolean isController(Class<?> clazz) {
-		return ActionSupport.class.isAssignableFrom(clazz);
-	}
-
-	public static boolean isFilter(Class<?> clazz) {
-		return ActionIntercepter.class.isAssignableFrom(clazz);
-	}
-
-	public static Class<?> getValidator(Method method) {
-		Before clazz = method.getAnnotation(Before.class);
-		if (clazz != null && DataValidator.class.isAssignableFrom(clazz.value()))
-			return clazz.value();
-		return null;
 	}
 
 	public interface FilterClassType {

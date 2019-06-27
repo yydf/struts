@@ -12,9 +12,12 @@ import javax.servlet.ServletException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.coder.struts.support.ActionSupport;
+import cn.coder.struts.support.Handler;
+import cn.coder.struts.support.Interceptor;
+import cn.coder.struts.support.StrutsConfig;
 import cn.coder.struts.util.ClassUtils;
 import cn.coder.struts.util.ClassUtils.FilterClassType;
-import cn.coder.struts.wrapper.ActionWrapper;
 import cn.coder.struts.wrapper.SessionWrapper;
 
 /**
@@ -27,21 +30,26 @@ import cn.coder.struts.wrapper.SessionWrapper;
  */
 public final class StrutsContainerInitializer implements ServletContainerInitializer, FilterClassType {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsContainerInitializer.class);
+
 	private static final String URL_PATTERN = "/*";
-	private final ActionWrapper actionWrapper = new ActionWrapper();
+	private Class<?> strutsConfig;
 	private final ArrayList<Class<?>> classes = new ArrayList<>();
-	private final ArrayList<Class<?>> initializers = new ArrayList<>();
-	private final ArrayList<Class<?>> filters = new ArrayList<>();
+	private final ArrayList<Class<?>> handlers = new ArrayList<>();
+	private final ArrayList<Class<?>> interceptors = new ArrayList<>();
+	private final ArrayList<Class<?>> controllers = new ArrayList<>();
 
 	public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException {
 		long start = System.currentTimeMillis();
-		ClassUtils.scanClasses(ctx, "/", this);
-		ctx.setAttribute("ActionWrapper", actionWrapper);
-		ctx.setAttribute("Classes", classes);
-		ctx.setAttribute("Filters", filters);
-		ctx.setAttribute("InitClasses", initializers);
 
-		// 增加session处理类
+		ClassUtils.scanClasses(ctx, "/", this);
+
+		ctx.setAttribute("Classes", classes);
+		ctx.setAttribute("StrutsConfig", strutsConfig);
+		ctx.setAttribute("Handlers", handlers);
+		ctx.setAttribute("Interceptors", interceptors);
+		ctx.setAttribute("Controllers", controllers);
+
+		// 添加Session监听
 		ctx.addListener(SessionWrapper.class);
 
 		// 增加全局Filter
@@ -58,14 +66,14 @@ public final class StrutsContainerInitializer implements ServletContainerInitial
 	public void filter(Class<?> clazz) {
 		if (clazz != null) {
 			classes.add(clazz);
-			// 判断是不是ActionSupport类
-			if (ClassUtils.isController(clazz)) {
-				actionWrapper.bindActions(clazz);
-			} else if (ClassUtils.isFilter(clazz)) {
-				filters.add(clazz);
-			} else if (ClassUtils.isWebInitializer(clazz)) {
-				initializers.add(clazz);
-			}
+			if (StrutsConfig.class.isAssignableFrom(clazz))
+				strutsConfig = clazz;
+			else if (Handler.class.isAssignableFrom(clazz))
+				handlers.add(clazz);
+			else if (Interceptor.class.isAssignableFrom(clazz))
+				interceptors.add(clazz);
+			else if (ActionSupport.class.isAssignableFrom(clazz))
+				controllers.add(clazz);
 		}
 	}
 }

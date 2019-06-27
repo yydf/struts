@@ -4,102 +4,97 @@ import java.util.ArrayList;
 
 import javax.servlet.ServletContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import cn.coder.struts.aop.Aop;
 import cn.coder.struts.aop.AopFactory;
-import cn.coder.struts.support.WebInitializer;
+import cn.coder.struts.support.StrutsConfig;
 import cn.coder.struts.wrapper.ActionWrapper;
 import cn.coder.struts.wrapper.OrderWrapper;
 
-/**
- * Struts核心类(初始化和绑定)
- * 
- * @author YYDF
- *
- */
 public final class StrutsContext {
-	private static final Logger logger = LoggerFactory.getLogger(StrutsContext.class);
-	private ActionHandler handler;
-	private ArrayList<WebInitializer> initArray;
+
+	private ServletContext servletContext;
+	private ActionWrapper wrapper;
+	private StrutsConfig strutsConfig;
+	private ArrayList<Class<?>> handlers;
 
 	public synchronized void init(ServletContext servletContext) {
-		initAopFactory(servletContext);
-		initWebInitializer(servletContext);
-		initActionHandler(servletContext);
+		this.servletContext = servletContext;
+
+		ininAopFactory();
+		initConfig();
+		initHandlers();
+		initActions();
 	}
 
-	private void initAopFactory(ServletContext sc) {
+	private void initConfig() {
+		Class<?> clazz = (Class<?>) servletContext.getAttribute("StrutsConfig");
+		servletContext.removeAttribute("StrutsConfig");
+		if (clazz != null) {
+			this.strutsConfig = (StrutsConfig) Aop.create(clazz);
+		}
+	}
+
+	private void ininAopFactory() {
 		@SuppressWarnings("unchecked")
-		ArrayList<Class<?>> classes = (ArrayList<Class<?>>) sc.getAttribute("Classes");
-		sc.removeAttribute("Classes");
+		ArrayList<Class<?>> classes = (ArrayList<Class<?>>) servletContext.getAttribute("Classes");
+		servletContext.removeAttribute("Classes");
 		AopFactory.init(classes);
 	}
 
-	private void initWebInitializer(ServletContext sc) {
+	private void initHandlers() {
 		@SuppressWarnings("unchecked")
-		ArrayList<Class<?>> initClasses = (ArrayList<Class<?>>) sc.getAttribute("InitClasses");
-		sc.removeAttribute("InitClasses");
-		if (initClasses != null && initClasses.size() > 0) {
-			OrderWrapper.sort(initClasses);
-			initArray = new ArrayList<>();
-			WebInitializer initObj;
-			for (Class<?> clazz : initClasses) {
-				try {
-					initObj = (WebInitializer) clazz.newInstance();
-					initArray.add(initObj);
-				} catch (Exception e) {
-					logger.error("WebInitializer create faild", e);
-				}
+		ArrayList<Class<?>> classes = (ArrayList<Class<?>>) servletContext.getAttribute("Handlers");
+		servletContext.removeAttribute("Handlers");
+		OrderWrapper.sort(classes);
+//		if (classes == null) {
+//			classes = new ArrayList<>();
+//		}
+//		classes.add(ActionHandler.class);
+		this.handlers = classes;
+	}
+
+	private void initActions() {
+		@SuppressWarnings("unchecked")
+		ArrayList<Class<?>> classes = (ArrayList<Class<?>>) servletContext.getAttribute("Controllers");
+		servletContext.removeAttribute("Controllers");
+		@SuppressWarnings("unchecked")
+		ArrayList<Class<?>> interceptors = (ArrayList<Class<?>>) servletContext.getAttribute("Interceptors");
+		servletContext.removeAttribute("Interceptors");
+		if (interceptors != null) {
+			OrderWrapper.sort(interceptors);
+		}
+		this.wrapper = new ActionWrapper(classes, interceptors);
+	}
+
+	public ActionWrapper getWrapper() {
+		return this.wrapper;
+	}
+
+	public ArrayList<Class<?>> getHandlers() {
+		return this.handlers;
+	}
+
+	public synchronized void start() {
+		if (this.strutsConfig != null) {
+			try {
+				this.strutsConfig.onStartup(servletContext);
+			} catch (Exception e) {
+				// TODO: handle exception
 			}
 		}
-	}
-
-	private void initActionHandler(ServletContext sc) {
-		@SuppressWarnings("unchecked")
-		ArrayList<Class<?>> filters = (ArrayList<Class<?>>) sc.getAttribute("Filters");
-		sc.removeAttribute("Filters");
-		// 按Order注解排序
-		OrderWrapper.sort(filters);
-		ActionWrapper actionWrapper = (ActionWrapper) sc.getAttribute("ActionWrapper");
-		sc.removeAttribute("ActionWrapper");
-		this.handler = new ActionHandler(actionWrapper, filters);
-	}
-
-	public synchronized void startUp(ServletContext servletContext) {
-		if (initArray != null) {
-			for (WebInitializer init : initArray) {
-				try {
-					Aop.inject(init);
-					init.onStartup(servletContext);
-				} catch (Exception e) {
-					if (logger.isErrorEnabled())
-						logger.error("WebInitializer start faild", e);
-				}
-			}
-		}
-	}
-
-	public ActionHandler getHandler() {
-		return this.handler;
 	}
 
 	public synchronized void destroy() {
-		if (initArray != null) {
-			for (WebInitializer init : initArray) {
-				try {
-					init.destroy();
-				} catch (Exception e) {
-					if (logger.isErrorEnabled())
-						logger.error("WebInitializer destroy faild", e);
-				}
+		if (this.strutsConfig != null) {
+			try {
+				this.strutsConfig.destroy();
+			} catch (Exception e) {
+				// TODO: handle exception
 			}
-			initArray.clear();
+			this.strutsConfig = null;
 		}
-		Aop.clear();
-		this.handler.clear();
-		this.handler = null;
+		this.wrapper.clear();
+		this.wrapper = null;
 	}
 
 }

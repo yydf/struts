@@ -1,5 +1,6 @@
 package cn.coder.struts.support;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Set;
 
@@ -54,13 +55,18 @@ public abstract class ActionSupport implements processFile {
 		return this.response;
 	}
 
-	protected String getParameter(String name) {
+	@SuppressWarnings("unchecked")
+	public <T> T getParameter(Class<T> clazz, String name) {
 		// 最高优先级
 		Object value = request.getAttribute(name);
 		String str = value == null ? request.getParameter(name) : value.toString();
 		if (isMultipartRequest)
 			str = multipartWrapper.getField(name, str);
-		return StringUtils.filterJSNull(str);
+		return (T) BeanUtils.toValue(clazz, StringUtils.filterJSNull(str));
+	}
+
+	public String getParameter(String name) {
+		return getParameter(String.class, name);
 	}
 
 	protected Object getSession(String name) {
@@ -112,7 +118,11 @@ public abstract class ActionSupport implements processFile {
 	}
 
 	@Override
-	public abstract String processMultipartFile(MultipartFile file);
+	public String processMultipartFile(MultipartFile file) {
+		String temp = request.getServletContext().getRealPath("/upload/") + file.getFileName();
+		file.transferTo(new File(temp));
+		return "/upload/" + file.getFileName();
+	}
 
 	public void clear() {
 		this.request = null;

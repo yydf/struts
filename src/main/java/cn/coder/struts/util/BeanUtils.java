@@ -27,7 +27,7 @@ public class BeanUtils {
 		}
 	}
 
-	private static Object toValue(Class<?> type, Object value) {
+	public static Object toValue(Class<?> type, Object value) {
 		if (value == null)
 			return null;
 		if (value.getClass().equals(type))
