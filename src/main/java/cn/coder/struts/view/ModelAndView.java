@@ -14,6 +14,7 @@ import cn.coder.struts.util.BeanUtils;
 
 public final class ModelAndView {
 	private static final Logger logger = LoggerFactory.getLogger(ModelAndView.class);
+
 	private String viewName;
 	private final HashMap<String, Object> temp;
 
@@ -49,10 +50,12 @@ public final class ModelAndView {
 				if ("serialVersionUID".equals(field.getName()))
 					continue;
 				try {
-					field.setAccessible(true);
+					if (!field.isAccessible())
+						field.setAccessible(true);
 					addObject(field.getName(), field.get(obj));
 				} catch (IllegalArgumentException | IllegalAccessException e) {
-					logger.error("Add object faild", e);
+					if (logger.isErrorEnabled())
+						logger.error("Add object faild", e);
 				}
 			}
 		}
@@ -61,7 +64,8 @@ public final class ModelAndView {
 
 	public ModelAndView addObject(String attr, Object obj) {
 		this.temp.put(attr, obj);
-		logger.debug("Add object [{}]{}", attr, obj);
+		if (logger.isDebugEnabled())
+			logger.debug("Add object [{}]{}", attr, obj);
 		return this;
 	}
 
@@ -71,7 +75,9 @@ public final class ModelAndView {
 			for (Entry<String, Object> entry : entries) {
 				req.setAttribute(entry.getKey(), entry.getValue());
 			}
-			logger.debug("Fill request:{}", entries.size());
+			if (logger.isDebugEnabled())
+				logger.debug("Fill request:{}", entries.size());
 		}
 	}
+
 }

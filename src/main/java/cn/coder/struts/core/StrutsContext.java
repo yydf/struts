@@ -1,100 +1,72 @@
 package cn.coder.struts.core;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.ServletContext;
 
-import cn.coder.struts.aop.Aop;
-import cn.coder.struts.aop.AopFactory;
-import cn.coder.struts.support.StrutsConfig;
-import cn.coder.struts.wrapper.ActionWrapper;
-import cn.coder.struts.wrapper.OrderWrapper;
+import cn.coder.struts.support.ActionSupport;
+import cn.coder.struts.support.Interceptor;
+import cn.coder.struts.support.StrutsLoader;
 
 public final class StrutsContext {
 
 	private ServletContext servletContext;
-	private ActionWrapper wrapper;
-	private StrutsConfig strutsConfig;
-	private ArrayList<Class<?>> handlers;
+	private Class<?> loaderClass;
+	private Set<Class<?>> allClasses = new HashSet<>();// 避免重复
+	private Set<Class<?>> interceptors = new HashSet<>();// 避免重复
+	private Set<Class<?>> controllers = new HashSet<>();// 避免重复
 
-	public synchronized void init(ServletContext servletContext) {
-		this.servletContext = servletContext;
-
-		ininAopFactory();
-		initConfig();
-		initHandlers();
-		initActions();
+	public StrutsContext(ServletContext ctx) {
+		this.servletContext = ctx;
 	}
 
-	private void initConfig() {
-		Class<?> clazz = (Class<?>) servletContext.getAttribute("StrutsConfig");
-		servletContext.removeAttribute("StrutsConfig");
-		if (clazz != null) {
-			this.strutsConfig = (StrutsConfig) Aop.create(clazz);
-		}
+	public Set<String> getResourcePaths(String path) {
+		return this.servletContext.getResourcePaths(path);
 	}
 
-	private void ininAopFactory() {
-		@SuppressWarnings("unchecked")
-		ArrayList<Class<?>> classes = (ArrayList<Class<?>>) servletContext.getAttribute("Classes");
-		servletContext.removeAttribute("Classes");
-		AopFactory.init(classes);
-	}
+	public void add(String className) {
+		try {
+			Class<?> clazz = Class.forName(className);
+			if (clazz != null) {
+				allClasses.add(clazz);
+				if (StrutsLoader.class.isAssignableFrom(clazz))
+					this.loaderClass = clazz;
+				else if (Interceptor.class.isAssignableFrom(clazz))
+					interceptors.add(clazz);
+				else if (ActionSupport.class.isAssignableFrom(clazz))
+					controllers.add(clazz);
+				else {
 
-	private void initHandlers() {
-		@SuppressWarnings("unchecked")
-		ArrayList<Class<?>> classes = (ArrayList<Class<?>>) servletContext.getAttribute("Handlers");
-		servletContext.removeAttribute("Handlers");
-		OrderWrapper.sort(classes);
-//		if (classes == null) {
-//			classes = new ArrayList<>();
-//		}
-//		classes.add(ActionHandler.class);
-		this.handlers = classes;
-	}
-
-	private void initActions() {
-		@SuppressWarnings("unchecked")
-		ArrayList<Class<?>> classes = (ArrayList<Class<?>>) servletContext.getAttribute("Controllers");
-		servletContext.removeAttribute("Controllers");
-		@SuppressWarnings("unchecked")
-		ArrayList<Class<?>> interceptors = (ArrayList<Class<?>>) servletContext.getAttribute("Interceptors");
-		servletContext.removeAttribute("Interceptors");
-		if (interceptors != null) {
-			OrderWrapper.sort(interceptors);
-		}
-		this.wrapper = new ActionWrapper(classes, interceptors);
-	}
-
-	public ActionWrapper getWrapper() {
-		return this.wrapper;
-	}
-
-	public ArrayList<Class<?>> getHandlers() {
-		return this.handlers;
-	}
-
-	public synchronized void start() {
-		if (this.strutsConfig != null) {
-			try {
-				this.strutsConfig.onStartup(servletContext);
-			} catch (Exception e) {
-				// TODO: handle exception
+				}
 			}
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
-	public synchronized void destroy() {
-		if (this.strutsConfig != null) {
-			try {
-				this.strutsConfig.destroy();
-			} catch (Exception e) {
-				// TODO: handle exception
-			}
-			this.strutsConfig = null;
-		}
-		this.wrapper.clear();
-		this.wrapper = null;
+	public Class<?> getLoaderClass() {
+		return this.loaderClass;
+	}
+
+	public ArrayList<Class<?>> getAllClasses() {
+		return new ArrayList<>(this.allClasses);
+	}
+
+	public ArrayList<Class<?>> getInterceptors() {
+		return new ArrayList<>(this.interceptors);
+	}
+
+	public ArrayList<Class<?>> getControllers() {
+		return new ArrayList<>(this.controllers);
+	}
+
+	public void clear() {
+		this.servletContext = null;
+		this.allClasses.clear();
+		this.interceptors.clear();
 	}
 
 }

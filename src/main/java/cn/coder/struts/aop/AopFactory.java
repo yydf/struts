@@ -18,7 +18,7 @@ public final class AopFactory {
 	private HashMap<Field, Class<?>> maps = new HashMap<>();
 	private ArrayList<Class<?>> noInject = new ArrayList<>();
 
-	public static void init(ArrayList<Class<?>> classes) {
+	public synchronized static void init(ArrayList<Class<?>> classes) {
 		allClasses = classes;
 	}
 
@@ -26,11 +26,11 @@ public final class AopFactory {
 		try {
 			T obj = controller.newInstance();
 			inject(obj);
-			if (logger.isDebugEnabled())
-				logger.debug("Finished create bean '{}'", controller.getName());
 			return obj;
 		} catch (InstantiationException | IllegalAccessException e) {
-			throw new RuntimeException("Can not create bean '" + controller.getName() + "'", e);
+			if (logger.isErrorEnabled())
+				logger.error("Can not create bean '" + controller.getName() + "'", e);
+			return null;
 		}
 	}
 
@@ -67,13 +67,13 @@ public final class AopFactory {
 				return cla;
 			}
 		}
-		throw new RuntimeException("Can not find resource '" + field.getName() + "'");
+		if (logger.isWarnEnabled())
+			logger.warn("Can not find resource '" + field.getName() + "'");
+		return null;
 	}
 
 	private static void injectBean(Field field, Object obj, Object target) {
 		BeanUtils.setValue(field, obj, target);
-		if (logger.isDebugEnabled())
-			logger.debug("Finished inject bean '{}'", field.getType().getName());
 	}
 
 	public void clear() {

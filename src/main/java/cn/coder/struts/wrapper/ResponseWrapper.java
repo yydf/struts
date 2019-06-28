@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.util.StringUtils;
-import cn.coder.struts.util.ClassUtils;
 import cn.coder.struts.view.JSONMap;
 import cn.coder.struts.view.ModelAndView;
 
@@ -21,27 +20,32 @@ public class ResponseWrapper {
 
 	public void doResponse(Object result, HttpServletRequest req, HttpServletResponse res)
 			throws IOException, ServletException {
-		boolean supportGzip = ClassUtils.isSupportGZip(req);
+		boolean supportGzip = isSupportGZip(req);
 		if (result instanceof JSONMap) {
 			res.setContentType("application/json;charset=UTF-8");
 			String json = result.toString();
 			String callback = req.getParameter("callback");
-			if (StringUtils.isNotBlank(callback))
+			if (!StringUtils.isEmpty(callback))
 				json = callback + "(" + json + ")";
 			renderText(json, supportGzip, res);
 			((JSONMap) result).clear();
 			if (logger.isDebugEnabled())
-				logger.debug("[JSON]" + StringUtils.sub(json, 1024, "..."));
+				logger.debug("[JSON]" + json);
 		} else if (result instanceof String) {
 			res.setContentType("text/plain;charset=UTF-8");
 			String text = result.toString();
 			renderText(text, supportGzip, res);
 			if (logger.isDebugEnabled())
-				logger.debug("[TEXT]" + StringUtils.sub(text, 1024, "..."));
+				logger.debug("[TEXT]" + text);
 		} else if (result instanceof ModelAndView) {
 			renderView((ModelAndView) result, req, res);
 		} else
 			throw new ServletException("Unsupported return type " + result.getClass());
+	}
+
+	private boolean isSupportGZip(HttpServletRequest req) {
+		String encoding = req.getHeader("Accept-Encoding");
+		return encoding != null && encoding.indexOf("gzip") > -1;
 	}
 
 	private static void renderView(ModelAndView mav, HttpServletRequest req, HttpServletResponse res)

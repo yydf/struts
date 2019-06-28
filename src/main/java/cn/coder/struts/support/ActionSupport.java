@@ -1,11 +1,11 @@
 package cn.coder.struts.support;
 
-import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.slf4j.Logger;
@@ -16,28 +16,20 @@ import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.view.MultipartFile;
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
 import cn.coder.struts.wrapper.MultipartRequestWrapper.processFile;
-import cn.coder.struts.wrapper.SessionWrapper;
 
-/**
- * Action的基础类<br>
- * 包含request和response<br>
- * 可通过getParameter(name)获取参数值<br>
- * 可通过getMultipartFile获取上传文件对象MultipartFile
- * 
- * @author YYDF
- *
- */
 public abstract class ActionSupport implements processFile {
-
 	private static final Logger logger = LoggerFactory.getLogger(ActionSupport.class);
-	protected HttpServletRequest request;
-	protected HttpServletResponse response;
-	protected boolean isMultipartRequest;
+
+	private HttpSession session;
+	private HttpServletRequest request;
+	private HttpServletResponse response;
+	private boolean isMultipartRequest = false;
 	private MultipartRequestWrapper multipartWrapper;
 
-	public void init(HttpServletRequest req2, HttpServletResponse res2) {
-		this.request = req2;
-		this.response = res2;
+	public void init(HttpServletRequest req, HttpServletResponse res) {
+		this.request = req;
+		this.response = res;
+		this.session = req.getSession();
 		this.isMultipartRequest = ServletFileUpload.isMultipartContent(request);
 		if (isMultipartRequest) {
 			multipartWrapper = new MultipartRequestWrapper(request);
@@ -45,6 +37,12 @@ public abstract class ActionSupport implements processFile {
 			if (logger.isDebugEnabled())
 				logger.debug("Process multipart request");
 		}
+	}
+
+	public abstract String processMultipartFile(MultipartFile file);
+
+	protected Object getSession(String name) {
+		return this.session.getAttribute(name);
 	}
 
 	protected HttpServletRequest getRequest() {
@@ -67,28 +65,6 @@ public abstract class ActionSupport implements processFile {
 
 	public String getParameter(String name) {
 		return getParameter(String.class, name);
-	}
-
-	protected Object getSession(String name) {
-		return request.getSession().getAttribute(name);
-	}
-
-	protected Object getSession(String name, String sId) {
-		return SessionWrapper.getAttribute(name, sId);
-	}
-
-	protected void setSession(String name, Object value) {
-		request.getSession().setAttribute(name, value);
-	}
-
-	protected String getSessionId() {
-		return request.getSession().getId();
-	}
-
-	protected MultipartFile getMultipartFile(String name) {
-		if (isMultipartRequest)
-			return multipartWrapper.getMultipartFile(name);
-		return null;
 	}
 
 	protected <T> T getPostData(Class<T> clazz) {
@@ -117,20 +93,11 @@ public abstract class ActionSupport implements processFile {
 		return ip;
 	}
 
-	@Override
-	public String processMultipartFile(MultipartFile file) {
-		String temp = request.getServletContext().getRealPath("/upload/") + file.getFileName();
-		file.transferTo(new File(temp));
-		return "/upload/" + file.getFileName();
-	}
-
 	public void clear() {
+		this.isMultipartRequest = false;
 		this.request = null;
 		this.response = null;
-		this.isMultipartRequest = false;
-		if (multipartWrapper != null) {
-			multipartWrapper.clear();
-			multipartWrapper = null;
-		}
+		this.session = null;
 	}
+
 }

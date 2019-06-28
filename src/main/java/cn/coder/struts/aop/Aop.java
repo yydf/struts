@@ -10,8 +10,10 @@ public final class Aop {
 	 * @param controller
 	 * @return
 	 */
-	public static <T> T create(Class<T> controller) {
-		return factory.create(controller);
+	public static <T> T create(Class<T> clazz) {
+		if (clazz == null)
+			return null;
+		return factory.create(clazz);
 	}
 
 	/**
@@ -20,6 +22,8 @@ public final class Aop {
 	 * @param obj
 	 */
 	public static void inject(Object obj) {
+		if (obj == null)
+			return;
 		factory.inject(obj);
 	}
 

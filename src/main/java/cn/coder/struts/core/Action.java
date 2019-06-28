@@ -1,27 +1,38 @@
-package cn.coder.struts.view;
+package cn.coder.struts.core;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 
+import cn.coder.struts.annotation.Request;
+import cn.coder.struts.annotation.Request.HttpMethod;
 import cn.coder.struts.wrapper.OrderWrapper;
 
 public final class Action {
 
-	private Method method;
-	private Class<?> controller;
+	private final Method method;
+	private final Parameter[] parameters;
+	private final Class<?> controller;
+	private final HttpMethod httpMethod;
 	private ArrayList<Class<?>> interceptors;
 
 	public Action(Method method) {
 		this.method = method;
+		this.httpMethod = method.getAnnotation(Request.class).method();
+		this.parameters = method.getParameters();
 		this.controller = method.getDeclaringClass();
+	}
+
+	public Class<?> getController() {
+		return this.controller;
 	}
 
 	public Method getMethod() {
 		return this.method;
 	}
 
-	public Class<?> getController() {
-		return this.controller;
+	public Parameter[] getParameters() {
+		return this.parameters;
 	}
 
 	public void setInterceptors(Class<?>[] classes) {
@@ -39,6 +50,10 @@ public final class Action {
 
 	public ArrayList<Class<?>> getInterceptors() {
 		return this.interceptors;
+	}
+
+	public String getHttpMethod() {
+		return this.httpMethod.name();
 	}
 
 }

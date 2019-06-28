@@ -18,8 +18,8 @@ import org.slf4j.LoggerFactory;
 import cn.coder.struts.view.MultipartFile;
 
 public final class MultipartRequestWrapper {
-
-	static final Logger logger = LoggerFactory.getLogger(MultipartRequestWrapper.class);
+	private static final Logger logger = LoggerFactory.getLogger(MultipartRequestWrapper.class);
+	
 	private HttpServletRequest request;
 	private HashMap<String, String> paras = new HashMap<>();
 	private HashMap<String, MultipartFile> multipartFiles = new HashMap<>();
