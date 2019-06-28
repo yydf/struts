@@ -15,21 +15,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.core.Action;
-import cn.coder.struts.core.StrutsDispatcher;
+import cn.coder.struts.core.StrutsResolver;
 import cn.coder.struts.core.ActionHandler;
 
 public final class StrutsFilter implements Filter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
 
-	private StrutsDispatcher dispatcher;
+	private StrutsResolver resolver;
 	private ActionHandler actionHandler;
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 		long start = System.currentTimeMillis();
-		dispatcher = new StrutsDispatcher(filterConfig.getServletContext());
-		dispatcher.start();
-		this.actionHandler = dispatcher.getHandler();
+		resolver = new StrutsResolver(filterConfig.getServletContext());
+		resolver.start();
+		this.actionHandler = resolver.getHandler();
 		if (logger.isDebugEnabled())
 			logger.debug("Struts started with {}ms", (System.currentTimeMillis() - start));
 	}
@@ -44,12 +44,6 @@ public final class StrutsFilter implements Filter {
 		String path = req.getServletPath();
 		Action action = this.actionHandler.getAction(path);
 		if (action != null) {
-			if (!req.getMethod().equals(action.getHttpMethod())) {
-				if (logger.isDebugEnabled())
-					logger.debug("Action '{}' not allowed '{}'", path, req.getMethod());
-				res.sendError(405);
-				return;
-			}
 			this.actionHandler.handle(action, req, res);
 		} else {
 			if (logger.isWarnEnabled())
@@ -62,9 +56,9 @@ public final class StrutsFilter implements Filter {
 	public void destroy() {
 		long start = System.currentTimeMillis();
 		this.actionHandler = null;
-		if (dispatcher != null) {
-			dispatcher.destroy();
-			dispatcher = null;
+		if (resolver != null) {
+			resolver.destroy();
+			resolver = null;
 		}
 		if (logger.isDebugEnabled())
 			logger.debug("Struts destroied with {}ms", (System.currentTimeMillis() - start));

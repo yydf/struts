@@ -26,7 +26,7 @@ public final class StrutsContext {
 		return this.servletContext.getResourcePaths(path);
 	}
 
-	public void add(String className) {
+	public void split(String className) {
 		try {
 			Class<?> clazz = Class.forName(className);
 			if (clazz != null) {
@@ -63,10 +63,12 @@ public final class StrutsContext {
 		return new ArrayList<>(this.controllers);
 	}
 
-	public void clear() {
+	public synchronized void clear() {
 		this.servletContext = null;
+		this.loaderClass = null;
 		this.allClasses.clear();
 		this.interceptors.clear();
+		this.controllers.clear();
 	}
 
 }

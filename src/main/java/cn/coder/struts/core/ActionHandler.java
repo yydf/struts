@@ -1,5 +1,6 @@
 package cn.coder.struts.core;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collection;
@@ -120,15 +121,21 @@ public final class ActionHandler {
 		return mappings.get(path);
 	}
 
-	public void handle(Action action, HttpServletRequest req, HttpServletResponse res) {
+	public void handle(Action action, HttpServletRequest req, HttpServletResponse res) throws IOException {
+		if (!req.getMethod().equals(action.getHttpMethod())) {
+			if (logger.isDebugEnabled())
+				logger.debug("Action '{}' not allowed '{}'", req.getServletPath(), req.getMethod());
+			res.sendError(405);
+			return;
+		}
+		Invocation invocation = new Invocation(req, res, action);
+		if (!invocation.complete()) {
+			if (logger.isDebugEnabled())
+				logger.debug("Interceptor stoped");
+			return;
+		}
 		ActionSupport support = null;
 		try {
-			Invocation invocation = new Invocation(req, res, action);
-			if (!invocation.complete()) {
-				if (logger.isDebugEnabled())
-					logger.debug("Interceptor stoped");
-				return;
-			}
 			support = (ActionSupport) Aop.create(action.getController());
 			support.init(req, res);
 			Object[] args = buildArgs(action, support, req, res);

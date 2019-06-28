@@ -8,7 +8,7 @@ import cn.coder.struts.aop.Aop;
 import cn.coder.struts.aop.AopFactory;
 import cn.coder.struts.support.StrutsLoader;
 
-public final class StrutsDispatcher {
+public final class StrutsResolver {
 
 	private StrutsContext context;
 	private ServletContext servletContext;
@@ -16,7 +16,7 @@ public final class StrutsDispatcher {
 	private ArrayList<Class<?>> interceptors;
 	private ActionHandler handler;
 
-	public StrutsDispatcher(ServletContext ctx) {
+	public StrutsResolver(ServletContext ctx) {
 		this.servletContext = ctx;
 		this.context = (StrutsContext) ctx.getAttribute("StrutsContext");
 

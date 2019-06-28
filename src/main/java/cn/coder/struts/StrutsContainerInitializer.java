@@ -31,7 +31,7 @@ public final class StrutsContainerInitializer implements ServletContainerInitial
 					path = path.replace("/WEB-INF/classes/", "");
 					path = path.replace(".class", "");
 					path = path.replace('/', '.');
-					context.add(path);
+					context.split(path);
 				} else {
 
 				}
