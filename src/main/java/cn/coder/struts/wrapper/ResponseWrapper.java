@@ -71,8 +71,8 @@ public class ResponseWrapper {
 			output.close();
 			output.finish();
 			if (logger.isDebugEnabled())
-				logger.debug("Compress gzip from " + len + " to " + res.getHeader("Content-Length") + " in "
-						+ (System.nanoTime() - start) + " ns");
+				logger.debug("Compress gzip from {} to {} in {} ns", len, res.getHeader("Content-Length"),
+						(System.nanoTime() - start));
 		} else {
 			PrintWriter pw = res.getWriter();
 			pw.write(text);

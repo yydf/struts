@@ -30,7 +30,7 @@ public final class Aop {
 	/**
 	 * 清空缓存
 	 */
-	public static void clear() {
+	public synchronized static void clear() {
 		factory.clear();
 	}
 

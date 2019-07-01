@@ -22,7 +22,7 @@ public class BeanUtils {
 			if (!field.isAccessible())
 				field.setAccessible(true);
 			field.set(obj, toValue(field.getType(), value));
-		} catch (IllegalArgumentException | IllegalAccessException e) {
+		} catch (Exception e) {
 			throw new RuntimeException("Set value faild", e);
 		}
 	}

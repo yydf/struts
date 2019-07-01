@@ -131,7 +131,7 @@ public final class ActionHandler {
 		Invocation invocation = new Invocation(req, res, action);
 		if (!invocation.complete()) {
 			if (logger.isDebugEnabled())
-				logger.debug("Interceptor stoped");
+				logger.debug("Action stoped by interceptor");
 			return;
 		}
 		ActionSupport support = null;
@@ -153,7 +153,8 @@ public final class ActionHandler {
 		}
 	}
 
-	private Object[] buildArgs(Action action, ActionSupport support, HttpServletRequest req, HttpServletResponse res) {
+	private static Object[] buildArgs(Action action, ActionSupport support, HttpServletRequest req,
+			HttpServletResponse res) {
 		Parameter[] parameters = action.getParameters();
 		Object[] args = null;
 		if (parameters != null && parameters.length > 0) {

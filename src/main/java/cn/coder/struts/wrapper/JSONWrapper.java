@@ -2,8 +2,6 @@ package cn.coder.struts.wrapper;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.sql.Timestamp;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,9 +17,10 @@ import cn.coder.struts.util.BeanUtils;
 
 public class JSONWrapper {
 	private static final Logger logger = LoggerFactory.getLogger(JSONWrapper.class);
-	private static final ThreadLocal<DateFormat> sdf = new ThreadLocal<DateFormat>() {
+
+	private static final ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat>() {
 		@Override
-		protected DateFormat initialValue() {
+		protected SimpleDateFormat initialValue() {
 			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		}
 	};
@@ -41,7 +40,8 @@ public class JSONWrapper {
 		try {
 			appendMap(jsonMap);
 		} catch (RuntimeException e) {
-			e.printStackTrace();
+			if (logger.isErrorEnabled())
+				logger.error("Write json faild", e);
 		}
 		return json.toString();
 	}
@@ -82,10 +82,6 @@ public class JSONWrapper {
 
 	private void appendDate(Object obj) {
 		json.append(MARKS).append(sdf.get().format(obj)).append(MARKS);
-	}
-
-	private boolean isDate(Object obj) {
-		return obj instanceof Date || obj instanceof Timestamp;
 	}
 
 	private void appendBean(Object obj) {
@@ -176,8 +172,12 @@ public class JSONWrapper {
 		return obj.getClass().isArray();
 	}
 
+	private boolean isDate(Object obj) {
+		return obj instanceof Date;
+	}
+
 	private static boolean isString(Object obj) {
-		return obj instanceof CharSequence || obj instanceof Character || obj instanceof String;
+		return obj instanceof CharSequence || obj instanceof Character;
 	}
 
 	private static boolean isNumber(Object obj) {

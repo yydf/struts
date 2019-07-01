@@ -6,11 +6,16 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import cn.coder.struts.aop.Aop;
 import cn.coder.struts.support.ActionSupport;
 import cn.coder.struts.support.Interceptor;
 import cn.coder.struts.support.StrutsLoader;
 
 public final class StrutsContext {
+	private static final Logger logger = LoggerFactory.getLogger(StrutsContext.class);
 
 	private ServletContext servletContext;
 	private Class<?> loaderClass;
@@ -42,8 +47,8 @@ public final class StrutsContext {
 				}
 			}
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			if (logger.isErrorEnabled())
+				logger.error("Path '{}' not found", className);
 		}
 	}
 
@@ -64,6 +69,7 @@ public final class StrutsContext {
 	}
 
 	public synchronized void clear() {
+		Aop.clear();
 		this.servletContext = null;
 		this.loaderClass = null;
 		this.allClasses.clear();
