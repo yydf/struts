@@ -49,4 +49,8 @@ public final class Invocation {
 		return this.num == size;
 	}
 
+	public Class<?> current() {
+		return interceptors.get(this.num);
+	}
+
 }

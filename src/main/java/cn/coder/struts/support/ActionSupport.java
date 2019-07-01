@@ -16,6 +16,7 @@ import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.view.MultipartFile;
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
 import cn.coder.struts.wrapper.MultipartRequestWrapper.processFile;
+import cn.coder.struts.wrapper.SessionWrapper;
 
 public abstract class ActionSupport implements processFile {
 	private static final Logger logger = LoggerFactory.getLogger(ActionSupport.class);
@@ -41,8 +42,8 @@ public abstract class ActionSupport implements processFile {
 
 	public abstract String processMultipartFile(MultipartFile file);
 
-	protected Object getSession(String name) {
-		return this.session.getAttribute(name);
+	protected HttpSession getSession() {
+		return this.session;
 	}
 
 	protected HttpServletRequest getRequest() {
@@ -51,6 +52,14 @@ public abstract class ActionSupport implements processFile {
 
 	protected HttpServletResponse getResponse() {
 		return this.response;
+	}
+
+	protected Object getSession(String name) {
+		return this.session.getAttribute(name);
+	}
+
+	protected Object getSession(String name, String sessionId) {
+		return SessionWrapper.getAttribute(name, sessionId);
 	}
 
 	@SuppressWarnings("unchecked")

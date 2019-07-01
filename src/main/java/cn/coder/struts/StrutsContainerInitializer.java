@@ -7,6 +7,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
 import cn.coder.struts.core.StrutsContext;
+import cn.coder.struts.wrapper.SessionWrapper;
 
 public final class StrutsContainerInitializer implements ServletContainerInitializer {
 
@@ -16,6 +17,9 @@ public final class StrutsContainerInitializer implements ServletContainerInitial
 		StrutsContext context = new StrutsContext(ctx);
 		scanPaths(context, "/WEB-INF/classes/");
 		ctx.setAttribute("StrutsContext", context);
+
+		// 增加Session监听
+		ctx.addListener(SessionWrapper.class);
 
 		// 增加全局过滤器
 		ctx.addFilter("StrutsFilter", StrutsFilter.class);

@@ -128,10 +128,10 @@ public final class ActionHandler {
 			res.sendError(405);
 			return;
 		}
-		Invocation invocation = new Invocation(req, res, action);
-		if (!invocation.complete()) {
+		Invocation inv = new Invocation(req, res, action);
+		if (!inv.complete()) {
 			if (logger.isDebugEnabled())
-				logger.debug("Action stoped by interceptor");
+				logger.debug("Action stoped by interceptor '{}'", inv.current().getName());
 			return;
 		}
 		ActionSupport support = null;
