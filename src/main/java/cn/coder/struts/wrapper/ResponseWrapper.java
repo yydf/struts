@@ -15,7 +15,7 @@ import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.view.JSONMap;
 import cn.coder.struts.view.ModelAndView;
 
-public class ResponseWrapper {
+public final class ResponseWrapper {
 	private static final Logger logger = LoggerFactory.getLogger(ResponseWrapper.class);
 
 	public void doResponse(Object result, HttpServletRequest req, HttpServletResponse res)

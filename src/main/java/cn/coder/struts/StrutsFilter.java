@@ -28,6 +28,7 @@ public final class StrutsFilter implements Filter {
 	public void init(FilterConfig filterConfig) throws ServletException {
 		long start = System.currentTimeMillis();
 		resolver = new StrutsResolver(filterConfig.getServletContext());
+		resolver.init();
 		resolver.start();
 		this.actionHandler = resolver.getHandler();
 		if (logger.isDebugEnabled())

@@ -13,8 +13,9 @@ import org.slf4j.LoggerFactory;
  * 
  * @author YYDF 2019-03-07
  */
-public class DateEx {
+public final class DateEx {
 	private static final Logger logger = LoggerFactory.getLogger(DateEx.class);
+	
 	private static final Calendar c = Calendar.getInstance();
 
 	public static String today(String join) {

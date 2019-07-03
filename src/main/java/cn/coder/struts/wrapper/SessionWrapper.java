@@ -9,7 +9,7 @@ import javax.servlet.http.HttpSessionListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SessionWrapper implements HttpSessionListener {
+public final class SessionWrapper implements HttpSessionListener {
 	private static final Logger logger = LoggerFactory.getLogger(SessionWrapper.class);
 	
 	private static final HashMap<String, HttpSession> sessionList = new HashMap<>();

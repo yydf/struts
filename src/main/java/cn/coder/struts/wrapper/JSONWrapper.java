@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.util.BeanUtils;
 
-public class JSONWrapper {
+public final class JSONWrapper {
 	private static final Logger logger = LoggerFactory.getLogger(JSONWrapper.class);
 
 	private static final ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat>() {

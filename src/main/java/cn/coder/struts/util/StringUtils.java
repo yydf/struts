@@ -1,6 +1,6 @@
 package cn.coder.struts.util;
 
-public class StringUtils {
+public final class StringUtils {
 	public static final String STR_NAN = "NaN";
 	public static final String STR_UNDEFINED = "undefined";
 	public static final String STR_NULL = "null";

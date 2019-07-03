@@ -19,11 +19,13 @@ public final class StrutsResolver {
 	public StrutsResolver(ServletContext ctx) {
 		this.servletContext = ctx;
 		this.context = (StrutsContext) ctx.getAttribute("StrutsContext");
+	}
 
+	public synchronized void init() {
 		initAop();
 		initLoader();
 		initInterceptor();
-		initMapping();
+		initHandler();
 	}
 
 	private void initAop() {
@@ -38,13 +40,13 @@ public final class StrutsResolver {
 		this.interceptors = context.getInterceptors();
 	}
 
-	private void initMapping() {
+	private void initHandler() {
 		this.handler = new ActionHandler(context.getControllers());
 		this.handler.buildInterceptors(this.interceptors);
 		this.handler.registerPath(servletContext.getFilterRegistration("StrutsFilter"));
 	}
 
-	public void start() {
+	public synchronized void start() {
 		if (loader != null) {
 			loader.onStartup(this.servletContext);
 		}
@@ -54,7 +56,7 @@ public final class StrutsResolver {
 		return this.handler;
 	}
 
-	public void destroy() {
+	public synchronized void destroy() {
 		this.servletContext = null;
 		this.interceptors.clear();
 		this.handler.clear();

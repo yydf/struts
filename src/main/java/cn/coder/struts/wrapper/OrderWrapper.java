@@ -12,7 +12,7 @@ import cn.coder.struts.annotation.Order;
  * @author YYDF
  *
  */
-public class OrderWrapper implements Comparator<Class<?>> {
+public final class OrderWrapper implements Comparator<Class<?>> {
 
 	@Override
 	public int compare(Class<?> o1, Class<?> o2) {
