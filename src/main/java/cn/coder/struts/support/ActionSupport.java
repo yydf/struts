@@ -33,8 +33,7 @@ public abstract class ActionSupport implements processFile {
 		this.session = req.getSession();
 		this.isMultipartRequest = ServletFileUpload.isMultipartContent(request);
 		if (isMultipartRequest) {
-			multipartWrapper = new MultipartRequestWrapper(request);
-			multipartWrapper.processRequest(this);
+			multipartWrapper = new MultipartRequestWrapper(request, this);
 			if (logger.isDebugEnabled())
 				logger.debug("Process multipart request");
 		}
@@ -103,10 +102,14 @@ public abstract class ActionSupport implements processFile {
 	}
 
 	public void clear() {
-		this.isMultipartRequest = false;
 		this.request = null;
 		this.response = null;
 		this.session = null;
+		this.isMultipartRequest = false;
+		if (multipartWrapper != null) {
+			multipartWrapper.clear();
+			multipartWrapper = null;
+		}
 	}
 
 }

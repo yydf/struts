@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.tomcat.util.http.fileupload.FileItemStream;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public final class MultipartFile {
 				this.extension = "";
 		}
 	}
-	
+
 	public long getSize() {
 		return size;
 	}
@@ -72,19 +73,11 @@ public final class MultipartFile {
 			return true;
 		} catch (IOException e) {
 			if (logger.isErrorEnabled())
-				logger.error("Save file faild", e);
+				logger.error("Transfer file faild", e);
 			return false;
-		} finally {
-			// 关闭输输出流
-			if (fos != null) {
-				try {
-					inputStream.close();
-					fos.close();
-				} catch (IOException e) {
-					if (logger.isErrorEnabled())
-						logger.error("FileOutputStream close faild", e);
-				}
-			}
+		} finally {// 关闭输入输出流
+			IOUtils.closeQuietly(inputStream);
+			IOUtils.closeQuietly(fos);
 		}
 	}
 

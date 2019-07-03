@@ -5,11 +5,9 @@ import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.tomcat.util.http.fileupload.FileItemFactory;
 import org.apache.tomcat.util.http.fileupload.FileItemIterator;
 import org.apache.tomcat.util.http.fileupload.FileItemStream;
 import org.apache.tomcat.util.http.fileupload.FileUploadException;
-import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
@@ -19,23 +17,22 @@ import cn.coder.struts.view.MultipartFile;
 
 public final class MultipartRequestWrapper {
 	private static final Logger logger = LoggerFactory.getLogger(MultipartRequestWrapper.class);
-	
+
 	private HttpServletRequest request;
 	private HashMap<String, String> paras = new HashMap<>();
 	private HashMap<String, MultipartFile> multipartFiles = new HashMap<>();
 	private static ServletFileUpload upload;
 
-	public MultipartRequestWrapper(HttpServletRequest req) {
+	public MultipartRequestWrapper(HttpServletRequest req, processFile process) {
 		this.request = req;
-		// 初始化一次
+		// 只初始化一次
 		if (upload == null) {
-			logger.debug("Init file upload");
-			FileItemFactory factory = new DiskFileItemFactory();
-			upload = new ServletFileUpload(factory);
+			upload = new ServletFileUpload();
 		}
+		wrapperRequest(process);
 	}
 
-	public void processRequest(processFile process) {
+	private void wrapperRequest(processFile process) {
 		try {
 			FileItemIterator items = upload.getItemIterator(request);
 			if (items != null) {
