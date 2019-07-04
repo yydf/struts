@@ -4,16 +4,26 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.util.Streams;
 import cn.coder.struts.util.StringUtils;
-import cn.coder.struts.util.multipart.FileItemStream;
+import cn.coder.struts.wrapper.MultipartRequestWrapper;
+import cn.coder.struts.wrapper.MultipartStream;
 
 public final class MultipartFile {
 	private static final Logger logger = LoggerFactory.getLogger(MultipartFile.class);
+
+	/**
+	 * HTTP content type header name.
+	 */
+	public static final String CONTENT_TYPE = "Content-Type";
+
+	private static final String CONTENT_DISPOSITION = MultipartRequestWrapper.CONTENT_DISPOSITION;
+	private static final String FORM_DATA = MultipartRequestWrapper.FORM_DATA;
 
 	private String fileName;
 	private String fieldName;
@@ -22,12 +32,20 @@ public final class MultipartFile {
 	private String contentType;
 	private String extension;
 
-	public MultipartFile(FileItemStream stream) throws IOException {
-		this.fileName = stream.getName();
-		this.fieldName = stream.getFieldName();
-		this.inputStream = stream.openStream();
-		this.size = (long) this.inputStream.available();
-		this.contentType = stream.getContentType();
+	public MultipartFile(MultipartStream stream) throws IOException {
+
+	}
+
+	public MultipartFile(Map<String, String> headers, InputStream input) {
+		this.fileName = getFileName(headers);
+		this.fieldName = getFieldName(headers);
+		this.inputStream = input;
+		try {
+			this.size = (long) input.available();
+		} catch (IOException e) {
+			this.size = 0;
+		}
+		this.contentType = headers.get(CONTENT_TYPE);
 		if (!StringUtils.isEmpty(fileName)) {
 			int last = fileName.lastIndexOf(".");
 			if (last > 0)
@@ -35,6 +53,20 @@ public final class MultipartFile {
 			else
 				this.extension = "";
 		}
+	}
+
+	private static String getFileName(Map<String, String> headers) {
+		String contentDisposition = headers.get(CONTENT_DISPOSITION);
+		if (contentDisposition != null)
+			return Streams.parseValue(contentDisposition, "filename");
+		return null;
+	}
+
+	private static String getFieldName(Map<String, String> headers) {
+		String contentDisposition = headers.get(CONTENT_DISPOSITION);
+		if (contentDisposition != null && contentDisposition.toLowerCase().startsWith(FORM_DATA))
+			return Streams.parseValue(contentDisposition, "name");
+		return null;
 	}
 
 	public long getSize() {
