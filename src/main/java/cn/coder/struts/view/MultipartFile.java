@@ -5,12 +5,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.tomcat.util.http.fileupload.FileItemStream;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.coder.struts.util.Streams;
 import cn.coder.struts.util.StringUtils;
+import cn.coder.struts.util.multipart.FileItemStream;
 
 public final class MultipartFile {
 	private static final Logger logger = LoggerFactory.getLogger(MultipartFile.class);
@@ -75,9 +75,10 @@ public final class MultipartFile {
 			if (logger.isErrorEnabled())
 				logger.error("Transfer file faild", e);
 			return false;
-		} finally {// 关闭输入输出流
-			IOUtils.closeQuietly(inputStream);
-			IOUtils.closeQuietly(fos);
+		} finally {
+			// 关闭输入输出流
+			Streams.close(inputStream);
+			Streams.close(fos);
 		}
 	}
 

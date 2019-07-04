@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,18 +23,14 @@ public abstract class ActionSupport implements processFile {
 	private HttpSession session;
 	private HttpServletRequest request;
 	private HttpServletResponse response;
-	private boolean isMultipartRequest = false;
 	private MultipartRequestWrapper multipartWrapper;
 
 	public void init(HttpServletRequest req, HttpServletResponse res) {
 		this.request = req;
 		this.response = res;
 		this.session = req.getSession();
-		this.isMultipartRequest = ServletFileUpload.isMultipartContent(request);
-		if (isMultipartRequest) {
+		if (MultipartRequestWrapper.isMultipartContent(request)) {
 			multipartWrapper = new MultipartRequestWrapper(request, this);
-			if (logger.isDebugEnabled())
-				logger.debug("Process multipart request");
 		}
 	}
 
@@ -66,13 +61,19 @@ public abstract class ActionSupport implements processFile {
 		// 最高优先级
 		Object value = request.getAttribute(name);
 		String str = value == null ? request.getParameter(name) : value.toString();
-		if (isMultipartRequest)
+		if (multipartWrapper != null)
 			str = multipartWrapper.getField(name, str);
 		return (T) BeanUtils.toValue(clazz, StringUtils.filterJSNull(str));
 	}
 
 	public String getParameter(String name) {
 		return getParameter(String.class, name);
+	}
+
+	protected MultipartFile getMultipartFile(String name) {
+		if (multipartWrapper != null)
+			return multipartWrapper.getMultipartFile(name);
+		return null;
 	}
 
 	protected <T> T getPostData(Class<T> clazz) {
@@ -105,7 +106,6 @@ public abstract class ActionSupport implements processFile {
 		this.request = null;
 		this.response = null;
 		this.session = null;
-		this.isMultipartRequest = false;
 		if (multipartWrapper != null) {
 			multipartWrapper.clear();
 			multipartWrapper = null;
