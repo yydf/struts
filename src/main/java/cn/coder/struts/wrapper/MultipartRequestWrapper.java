@@ -15,7 +15,7 @@ import cn.coder.struts.view.MultipartFile;
 
 public final class MultipartRequestWrapper {
 	private static final Logger logger = LoggerFactory.getLogger(MultipartRequestWrapper.class);
-	
+
 	public static final String CONTENT_DISPOSITION = "Content-Disposition";
 	public static final String FORM_DATA = "form-data";
 
@@ -42,11 +42,12 @@ public final class MultipartRequestWrapper {
 			boolean nextPart = stream.skipPreamble();
 			while (nextPart) {
 				Map<String, String> headers = getParsedHeaders(stream.readHeaders());
-				if (getFileName(headers) ==  null)
+				if (getFileName(headers) == null)
 					paras.put(getFieldName(headers), Streams.asString(stream.getInputStream()));
 				else {
 					MultipartFile file = new MultipartFile(headers, stream.getInputStream());
-					paras.put(file.getFieldName(), process.processMultipartFile(file));
+					if (file.getSize() > 0)
+						paras.put(file.getFieldName(), process.processMultipartFile(file));
 					multipartFiles.put(file.getFieldName(), file);
 				}
 				nextPart = stream.readBoundary();
@@ -63,7 +64,7 @@ public final class MultipartRequestWrapper {
 			return boundaryStr.getBytes();
 		return null;
 	}
-	
+
 	/**
 	 * <p>
 	 * Parses the <code>header-part</code> and returns as key/value pairs.
@@ -152,7 +153,7 @@ public final class MultipartRequestWrapper {
 		String headerValue = header.substring(header.indexOf(':') + 1).trim();
 		headers.put(headerName, headerValue);
 	}
-	
+
 	private static String getFileName(Map<String, String> headers) {
 		String contentDisposition = headers.get(CONTENT_DISPOSITION);
 		if (contentDisposition != null)
@@ -166,7 +167,7 @@ public final class MultipartRequestWrapper {
 			return Streams.parseValue(contentDisposition, "name");
 		return null;
 	}
-	
+
 	public static final boolean isMultipartContent(HttpServletRequest request) {
 		if (!"POST".equalsIgnoreCase(request.getMethod())) {
 			return false;

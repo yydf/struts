@@ -207,7 +207,7 @@ public final class MultipartStream {
 		this.boundaryLength = boundary.length + BOUNDARY_PREFIX.length;
 
 		this.input = input;
-		this.bufSize = boundaryLength * 2;
+		this.bufSize = Math.max(4096, this.boundaryLength * 2);
 		this.buffer = new byte[this.bufSize];
 
 		this.boundary = new byte[this.boundaryLength];
@@ -374,8 +374,6 @@ public final class MultipartStream {
 	 *
 	 * @return The amount of data discarded.
 	 *
-	 * @throws MalformedStreamException
-	 *             if the stream ends unexpectedly.
 	 * @throws IOException
 	 *             if an i/o error occurs.
 	 */
