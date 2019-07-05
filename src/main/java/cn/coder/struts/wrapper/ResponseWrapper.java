@@ -17,33 +17,45 @@ import cn.coder.struts.view.ModelAndView;
 
 public final class ResponseWrapper {
 	private static final Logger logger = LoggerFactory.getLogger(ResponseWrapper.class);
+	
+	private static final int LOG_LIMIIT = 1024;
+	private static final String CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
+	private static final String CONTENT_TYPE_TEXT = "text/plain;charset=UTF-8";
 
 	public void doResponse(Object result, HttpServletRequest req, HttpServletResponse res)
 			throws IOException, ServletException {
 		boolean supportGzip = isSupportGZip(req);
 		if (result instanceof JSONMap) {
-			res.setContentType("application/json;charset=UTF-8");
+			res.setContentType(CONTENT_TYPE_JSON);
 			String json = result.toString();
 			String callback = req.getParameter("callback");
 			if (!StringUtils.isEmpty(callback))
 				json = callback + "(" + json + ")";
 			renderText(json, supportGzip, res);
 			((JSONMap) result).clear();
-			if (logger.isDebugEnabled())
-				logger.debug("[JSON]" + json);
+			if (logger.isDebugEnabled()) {
+				if (json.length() > LOG_LIMIIT)
+					logger.debug("[JSON]" + json.substring(0, LOG_LIMIIT) + "...");
+				else
+					logger.debug("[JSON]" + json);
+			}
 		} else if (result instanceof String) {
-			res.setContentType("text/plain;charset=UTF-8");
+			res.setContentType(CONTENT_TYPE_TEXT);
 			String text = result.toString();
 			renderText(text, supportGzip, res);
-			if (logger.isDebugEnabled())
-				logger.debug("[TEXT]" + text);
+			if (logger.isDebugEnabled()) {
+				if (text.length() > LOG_LIMIIT)
+					logger.debug("[TEXT]" + text.substring(0, LOG_LIMIIT) + "...");
+				else
+					logger.debug("[TEXT]" + text);
+			}
 		} else if (result instanceof ModelAndView) {
 			renderView((ModelAndView) result, req, res);
 		} else
 			throw new ServletException("Unsupported return type " + result.getClass());
 	}
 
-	private boolean isSupportGZip(HttpServletRequest req) {
+	private static boolean isSupportGZip(HttpServletRequest req) {
 		String encoding = req.getHeader("Accept-Encoding");
 		return encoding != null && encoding.indexOf("gzip") > -1;
 	}

@@ -22,7 +22,7 @@ public final class JSONMap {
 		return this;
 	}
 
-	public JSONMap putAll(Map<String, Object> o) {
+	public <V> JSONMap putAll(Map<String, V> o) {
 		this.data.putAll(o);
 		return this;
 	}

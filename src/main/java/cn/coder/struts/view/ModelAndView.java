@@ -53,7 +53,7 @@ public final class ModelAndView {
 					if (!field.isAccessible())
 						field.setAccessible(true);
 					addObject(field.getName(), field.get(obj));
-				} catch (IllegalArgumentException | IllegalAccessException e) {
+				} catch (Exception e) {
 					if (logger.isErrorEnabled())
 						logger.error("Add object faild", e);
 				}

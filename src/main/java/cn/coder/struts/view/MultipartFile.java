@@ -12,16 +12,11 @@ import org.slf4j.LoggerFactory;
 import cn.coder.struts.util.Streams;
 import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
-import cn.coder.struts.wrapper.MultipartStream;
 
 public final class MultipartFile {
 	private static final Logger logger = LoggerFactory.getLogger(MultipartFile.class);
 
-	/**
-	 * HTTP content type header name.
-	 */
-	public static final String CONTENT_TYPE = "Content-Type";
-
+	private static final String CONTENT_TYPE = "Content-Type";
 	private static final String CONTENT_DISPOSITION = MultipartRequestWrapper.CONTENT_DISPOSITION;
 	private static final String FORM_DATA = MultipartRequestWrapper.FORM_DATA;
 
@@ -32,19 +27,11 @@ public final class MultipartFile {
 	private String contentType;
 	private String extension;
 
-	public MultipartFile(MultipartStream stream) throws IOException {
-
-	}
-
-	public MultipartFile(Map<String, String> headers, InputStream input) {
+	public MultipartFile(Map<String, String> headers, InputStream input) throws IOException {
 		this.fileName = getFileName(headers);
 		this.fieldName = getFieldName(headers);
 		this.inputStream = input;
-		try {
-			this.size = (long) input.available();
-		} catch (IOException e) {
-			this.size = 0;
-		}
+		this.size = (long) input.available();
 		this.contentType = headers.get(CONTENT_TYPE);
 		if (!StringUtils.isEmpty(fileName)) {
 			int last = fileName.lastIndexOf(".");
