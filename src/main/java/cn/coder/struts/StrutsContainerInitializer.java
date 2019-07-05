@@ -1,5 +1,6 @@
 package cn.coder.struts;
 
+import java.io.File;
 import java.util.Set;
 
 import javax.servlet.ServletContainerInitializer;
@@ -15,7 +16,11 @@ public final class StrutsContainerInitializer implements ServletContainerInitial
 	public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException {
 		// 扫描classes，获取Context
 		StrutsContext context = new StrutsContext(ctx);
-		scanPaths(context, "/WEB-INF/classes/");
+		File path = new File(ctx.getRealPath("/WEB-INF/classes/"));
+		if (path.exists())
+			scanPaths(context, "/WEB-INF/classes/");
+		else
+			throw new ServletException("Can not found the '/WEB-INF/classes/' path");
 		ctx.setAttribute("StrutsContext", context);
 
 		// 增加Session监听
