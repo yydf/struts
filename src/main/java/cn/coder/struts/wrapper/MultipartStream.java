@@ -23,60 +23,8 @@ import java.io.InputStream;
 import cn.coder.struts.util.Streams;
 
 /**
- * <p>
- * Low level API for processing file uploads.
- *
- * <p>
- * This class can be used to process data streams conforming to MIME 'multipart'
- * format as defined in <a href="http://www.ietf.org/rfc/rfc1867.txt">RFC
- * 1867</a>. Arbitrarily large amounts of data in the stream can be processed
- * under constant memory usage.
- *
- * <p>
- * The format of the stream is defined in the following way:<br>
- *
- * <code>
- *   multipart-body := preamble 1*encapsulation close-delimiter epilogue<br>
- *   encapsulation := delimiter body CRLF<br>
- *   delimiter := "--" boundary CRLF<br>
- *   close-delimiter := "--" boundary "--"<br>
- *   preamble := &lt;ignore&gt;<br>
- *   epilogue := &lt;ignore&gt;<br>
- *   body := header-part CRLF body-part<br>
- *   header-part := 1*header CRLF<br>
- *   header := header-name ":" header-value<br>
- *   header-name := &lt;printable ascii characters except ":"&gt;<br>
- *   header-value := &lt;any ascii characters except CR &amp; LF&gt;<br>
- *   body-data := &lt;arbitrary data&gt;<br>
- * </code>
- *
- * <p>
- * Note that body-data can contain another mulipart entity. There is limited
- * support for single pass processing of such nested streams. The nested stream
- * is <strong>required</strong> to have a boundary token of the same length as
- * the parent stream (see {@link #setBoundary(byte[])}).
- *
- * <p>
- * Here is an example of usage of this class.<br>
- *
- * <pre>
- * try {
- * 	MultipartStream multipartStream = new MultipartStream(input, boundary);
- * 	boolean nextPart = multipartStream.skipPreamble();
- * 	OutputStream output;
- * 	while (nextPart) {
- * 		String header = multipartStream.readHeaders();
- * 		// process headers
- * 		// create some output stream
- * 		multipartStream.readBodyData(output);
- * 		nextPart = multipartStream.readBoundary();
- * 	}
- * } catch (MultipartStream.MalformedStreamException e) {
- * 	// the stream failed to follow required syntax
- * } catch (IOException e) {
- * 	// a read or write error occurred
- * }
- * </pre>
+ * 解析Multipart
+ * 
  */
 public final class MultipartStream {
 
@@ -191,12 +139,6 @@ public final class MultipartStream {
 	 * @param boundary
 	 *            The token used for dividing the stream into
 	 *            <code>encapsulations</code>.
-	 * @param pNotifier
-	 *            The notifier, which is used for calling the progress listener,
-	 *            if any.
-	 *
-	 * @throws IllegalArgumentException
-	 *             If the buffer size is too small
 	 *
 	 * @since 1.3.1
 	 */
@@ -251,11 +193,8 @@ public final class MultipartStream {
 	 * @return <code>true</code> if there are more encapsulations in this
 	 *         stream; <code>false</code> otherwise.
 	 *
-	 * @throws FileUploadIOException
+	 * @throws IOException
 	 *             if the bytes read from the stream exceeded the size limits
-	 * @throws MalformedStreamException
-	 *             if the stream ends unexpectedly or fails to follow required
-	 *             syntax.
 	 */
 	public boolean readBoundary() throws IOException {
 		byte[] marker = new byte[2];
@@ -312,18 +251,6 @@ public final class MultipartStream {
 		}
 	}
 
-	/**
-	 * <p>
-	 * Reads the <code>header-part</code> of the current
-	 * <code>encapsulation</code>.
-	 *
-	 * <p>
-	 * Headers are returned verbatim to the input stream, including the trailing
-	 * <code>CRLF</code> marker. Parsing is left to the application.
-	 *
-	 * @return The <code>header-part</code> of the current encapsulation.
-	 *
-	 */
 	public String readHeaders() throws IOException {
 		int i = 0;
 		byte b;
@@ -387,8 +314,6 @@ public final class MultipartStream {
 	 * @return <code>true</code> if an <code>encapsulation</code> was found in
 	 *         the stream.
 	 *
-	 * @throws IOException
-	 *             if an i/o error occurs.
 	 */
 	public boolean skipPreamble() {
 		// First delimiter may be not preceeded with a CRLF.
@@ -563,7 +488,7 @@ public final class MultipartStream {
 			if (available() == 0 && makeAvailable() == 0) {
 				return -1;
 			}
-			//++total;
+			// ++total;
 			int b = buffer[head++];
 			if (b >= 0) {
 				return b;
@@ -603,7 +528,7 @@ public final class MultipartStream {
 			res = Math.min(res, len);
 			System.arraycopy(buffer, head, b, off, res);
 			head += res;
-			//total += res;
+			// total += res;
 			return res;
 		}
 
@@ -687,7 +612,7 @@ public final class MultipartStream {
 			}
 
 			// Move the data to the beginning of the buffer.
-			//total += tail - head - pad;
+			// total += tail - head - pad;
 			System.arraycopy(buffer, tail - pad, buffer, 0, pad);
 
 			// Refill buffer with new data.

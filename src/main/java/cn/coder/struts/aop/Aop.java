@@ -7,8 +7,8 @@ public final class Aop {
 	/**
 	 * 创建一个对象
 	 * 
-	 * @param controller
-	 * @return
+	 * @param clazz 类型
+	 * @return 创建的对象
 	 */
 	public static <T> T create(Class<T> clazz) {
 		if (clazz == null)
@@ -19,7 +19,7 @@ public final class Aop {
 	/**
 	 * 注入存在Resource注解的对象
 	 * 
-	 * @param obj
+	 * @param obj 要注入的对象
 	 */
 	public static void inject(Object obj) {
 		if (obj == null)
