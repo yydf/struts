@@ -28,6 +28,6 @@
     <version>0.0.6</version>
 </dependency>
 ```
-* [编码实现](https://github.com/yydf/struts/wikis/pages)
+* [编码实现](https://gitee.com/yydf/easystruts-xjcy/wikis/pages)
 * [DEMO示例](https://github.com/yydf/struts/blob/master/test.zip)
 
