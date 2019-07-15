@@ -32,7 +32,7 @@ public final class StrutsFilter implements Filter {
 		resolver.start();
 		this.actionHandler = resolver.getHandler();
 		if (logger.isDebugEnabled())
-			logger.debug("Struts started with {}ms", (System.currentTimeMillis() - start));
+			logger.debug("Struts framework started with {}ms", (System.currentTimeMillis() - start));
 	}
 
 	@Override

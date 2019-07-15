@@ -3,6 +3,7 @@ package cn.coder.struts.wrapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -188,6 +189,10 @@ public final class MultipartRequestWrapper {
 
 	public MultipartFile getMultipartFile(String name) {
 		return multipartFiles.get(name);
+	}
+
+	public Iterator<MultipartFile> getMultipartFiles() {
+		return multipartFiles.values().iterator();
 	}
 
 	public void clear() {

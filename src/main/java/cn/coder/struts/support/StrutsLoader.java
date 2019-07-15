@@ -1,10 +1,9 @@
 package cn.coder.struts.support;
 
-import javax.servlet.ServletContext;
+public interface StrutsLoader {
 
-public abstract class StrutsLoader {
+	void load();
 
-	public abstract void onStartup(ServletContext ctx);
-
-	public abstract void destroy();
+	void destroy();
+	
 }

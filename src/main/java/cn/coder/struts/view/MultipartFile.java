@@ -18,7 +18,6 @@ public final class MultipartFile {
 
 	private static final String CONTENT_TYPE = "Content-Type";
 	private static final String CONTENT_DISPOSITION = MultipartRequestWrapper.CONTENT_DISPOSITION;
-	private static final String FORM_DATA = MultipartRequestWrapper.FORM_DATA;
 
 	private String fileName;
 	private String fieldName;
@@ -43,17 +42,11 @@ public final class MultipartFile {
 	}
 
 	private static String getFileName(Map<String, String> headers) {
-		String contentDisposition = headers.get(CONTENT_DISPOSITION);
-		if (contentDisposition != null)
-			return Streams.parseValue(contentDisposition, "filename");
-		return null;
+		return Streams.parseValue(headers.get(CONTENT_DISPOSITION), "filename");
 	}
 
 	private static String getFieldName(Map<String, String> headers) {
-		String contentDisposition = headers.get(CONTENT_DISPOSITION);
-		if (contentDisposition != null && contentDisposition.toLowerCase().startsWith(FORM_DATA))
-			return Streams.parseValue(contentDisposition, "name");
-		return null;
+		return Streams.parseValue(headers.get(CONTENT_DISPOSITION), "name");
 	}
 
 	public long getSize() {

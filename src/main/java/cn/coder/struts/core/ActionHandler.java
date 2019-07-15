@@ -24,6 +24,7 @@ import cn.coder.struts.annotation.Request;
 import cn.coder.struts.annotation.Skip;
 import cn.coder.struts.aop.Aop;
 import cn.coder.struts.support.ActionSupport;
+import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.wrapper.ResponseWrapper;
 
 public final class ActionHandler {
@@ -80,7 +81,7 @@ public final class ActionHandler {
 			} else {
 				// Action没有Skip，但是Controller有Skip注解，取Controller和Action自己的注解
 				if (action.getController().getAnnotation(Skip.class) != null) {
-					action.setInterceptors(merge(action.getController().getAnnotation(Before.class),
+					action.setInterceptors(BeanUtils.mergeInterceptor(action.getController().getAnnotation(Before.class),
 							action.getMethod().getAnnotation(Before.class)));
 				} else {// 都没有Skip,设置全部的拦截器
 					action.setInterceptors(all);
@@ -89,20 +90,7 @@ public final class ActionHandler {
 		}
 	}
 
-	private static Class<?>[] merge(Before b1, Before b2) {
-		if (b1 == null && b2 == null)
-			return new Class<?>[0];
-		if (b1 == null || b1.value().length == 0)
-			return b2.value();
-		if (b2 == null || b2.value().length == 0)
-			return b1.value();
-		Class<?>[] arr1 = b1.value();
-		Class<?>[] arr2 = b2.value();
-		Class<?>[] arr = new Class<?>[arr1.length + arr2.length];
-		System.arraycopy(arr1, 0, arr, 0, arr1.length);
-		System.arraycopy(arr2, 0, arr, arr1.length, arr2.length);
-		return arr;
-	}
+	
 
 	public void registerPath(FilterRegistration filterRegistration) {
 		Set<String> paths = mappings.keySet();
@@ -154,7 +142,7 @@ public final class ActionHandler {
 	}
 
 	private static Object[] buildArgs(Action action, ActionSupport support, HttpServletRequest req,
-			HttpServletResponse res) {
+			HttpServletResponse res) throws Exception {
 		Parameter[] parameters = action.getParameters();
 		Object[] args = null;
 		if (parameters != null && parameters.length > 0) {

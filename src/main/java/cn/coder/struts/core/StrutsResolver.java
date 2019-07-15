@@ -48,7 +48,7 @@ public final class StrutsResolver {
 
 	public synchronized void start() {
 		if (loader != null) {
-			loader.onStartup(this.servletContext);
+			loader.load();
 		}
 	}
 

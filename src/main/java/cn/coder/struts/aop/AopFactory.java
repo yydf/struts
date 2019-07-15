@@ -7,9 +7,15 @@ import java.util.Set;
 
 import javax.annotation.Resource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import cn.coder.struts.support.ProxyHandler;
 import cn.coder.struts.util.BeanUtils;
 
 public final class AopFactory {
+	private static final Logger logger = LoggerFactory.getLogger(AopFactory.class);
+
 	private static ArrayList<Class<?>> allClasses;
 	private final HashMap<Field, Class<?>> maps = new HashMap<>();
 	private final ArrayList<Class<?>> noInject = new ArrayList<>();
@@ -48,12 +54,18 @@ public final class AopFactory {
 				hasInject++;
 			}
 		}
-		// 将没有Resource注解的对象存入缓存
-		if (hasInject == 0)
 
-		{
+		// 将没有Resource注解的对象存入缓存
+		if (hasInject == 0) {
 			noInject.add(clazz);
 		}
+	}
+
+	public Object getProxyedObject(Class<?> clazz, Class<? extends ProxyHandler> handler, Class<?>[] interfaces) {
+		Object obj = create(clazz);
+		if (obj != null)
+			return create(handler).bind(obj, interfaces);
+		throw new NullPointerException("Can't get the proxyobj");
 	}
 
 	private Class<?> findBean(Field field, Object obj) {
@@ -73,6 +85,8 @@ public final class AopFactory {
 			allClasses.clear();
 			allClasses = null;
 		}
+		if (logger.isDebugEnabled())
+			logger.debug("Aop factory cleared");
 	}
 
 }

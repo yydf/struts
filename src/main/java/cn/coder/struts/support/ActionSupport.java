@@ -1,6 +1,7 @@
 package cn.coder.struts.support;
 
 import java.lang.reflect.Field;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -73,6 +74,12 @@ public abstract class ActionSupport implements processFile {
 	protected MultipartFile getMultipartFile(String name) {
 		if (multipartWrapper != null)
 			return multipartWrapper.getMultipartFile(name);
+		return null;
+	}
+
+	protected Iterator<MultipartFile> getMultipartFiles() {
+		if (multipartWrapper != null)
+			return multipartWrapper.getMultipartFiles();
 		return null;
 	}
 

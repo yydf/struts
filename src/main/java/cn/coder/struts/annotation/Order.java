@@ -14,6 +14,6 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE, ElementType.METHOD })
 public @interface Order {
 
-	int value() default 0;
+	int value() default Integer.MIN_VALUE;
 	
 }
