@@ -75,7 +75,7 @@ public final class ResponseWrapper {
 
 	private static void renderText(String text, boolean supportGzip, HttpServletResponse res) throws IOException {
 		int len = text.length();
-		if (supportGzip && len > 128) {
+		if (supportGzip && len > 512) {
 			long start = System.nanoTime();
 			res.addHeader("Content-Encoding", "gzip");
 			GZIPOutputStream output = new GZIPOutputStream(res.getOutputStream());

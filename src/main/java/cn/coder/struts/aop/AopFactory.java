@@ -3,6 +3,7 @@ package cn.coder.struts.aop;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Resource;
@@ -16,11 +17,11 @@ import cn.coder.struts.util.BeanUtils;
 public final class AopFactory {
 	private static final Logger logger = LoggerFactory.getLogger(AopFactory.class);
 
-	private static ArrayList<Class<?>> allClasses;
+	private static List<Class<?>> allClasses;
 	private final HashMap<Field, Class<?>> maps = new HashMap<>();
-	private final ArrayList<Class<?>> noInject = new ArrayList<>();
+	private final List<Class<?>> noInject = new ArrayList<>();
 
-	public synchronized static void init(ArrayList<Class<?>> classes) {
+	public synchronized static void init(List<Class<?>> classes) {
 		allClasses = classes;
 	}
 

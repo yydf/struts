@@ -15,19 +15,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.core.Action;
-import cn.coder.struts.core.StrutsResolver;
 import cn.coder.struts.core.ActionHandler;
+import cn.coder.struts.core.StrutsContextResolver;
 
 public final class StrutsFilter implements Filter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
 
-	private StrutsResolver resolver;
+	private StrutsContextResolver resolver;
 	private ActionHandler actionHandler;
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 		long start = System.currentTimeMillis();
-		resolver = new StrutsResolver(filterConfig.getServletContext());
+		resolver = new StrutsContextResolver(filterConfig.getServletContext());
 		resolver.init();
 		resolver.start();
 		this.actionHandler = resolver.getHandler();
@@ -38,9 +38,11 @@ public final class StrutsFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
+		
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse res = (HttpServletResponse) response;
 		req.setCharacterEncoding("utf-8");
+		res.setCharacterEncoding("utf-8");
 
 		String path = req.getServletPath();
 		Action action = this.actionHandler.getAction(path);

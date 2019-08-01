@@ -1,7 +1,7 @@
 package cn.coder.struts.core;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.ServletContext;
@@ -18,10 +18,10 @@ public final class StrutsContext {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsContext.class);
 
 	private ServletContext servletContext;
-	private Class<?> loaderClass;
-	private Set<Class<?>> allClasses = new HashSet<>();// 避免重复
-	private Set<Class<?>> interceptors = new HashSet<>();// 避免重复
-	private Set<Class<?>> controllers = new HashSet<>();// 避免重复
+	private final List<Class<?>> loaderClasses = new ArrayList<>();
+	private final List<Class<?>> allClasses = new ArrayList<>();
+	private final List<Class<?>> interceptors = new ArrayList<>();
+	private final List<Class<?>> controllers = new ArrayList<>();
 
 	public StrutsContext(ServletContext ctx) {
 		this.servletContext = ctx;
@@ -37,14 +37,15 @@ public final class StrutsContext {
 			if (clazz != null) {
 				allClasses.add(clazz);
 				if (StrutsLoader.class.isAssignableFrom(clazz))
-					this.loaderClass = clazz;
+					addClass(loaderClasses, clazz);
 				else if (Interceptor.class.isAssignableFrom(clazz))
-					interceptors.add(clazz);
+					addClass(interceptors, clazz);
 				else if (ActionSupport.class.isAssignableFrom(clazz))
-					controllers.add(clazz);
+					addClass(controllers, clazz);
 				else {
 
 				}
+				addClass(allClasses, clazz);
 			}
 		} catch (ClassNotFoundException e) {
 			if (logger.isErrorEnabled())
@@ -52,26 +53,31 @@ public final class StrutsContext {
 		}
 	}
 
-	public Class<?> getLoaderClass() {
-		return this.loaderClass;
+	private static void addClass(List<Class<?>> classes, Class<?> clazz) {
+		if (!classes.contains(clazz))
+			classes.add(clazz);
 	}
 
-	public ArrayList<Class<?>> getAllClasses() {
-		return new ArrayList<>(this.allClasses);
+	public List<Class<?>> getLoaderClass() {
+		return this.loaderClasses;
 	}
 
-	public ArrayList<Class<?>> getInterceptors() {
-		return new ArrayList<>(this.interceptors);
+	public List<Class<?>> getAllClasses() {
+		return this.allClasses;
 	}
 
-	public ArrayList<Class<?>> getControllers() {
-		return new ArrayList<>(this.controllers);
+	public List<Class<?>> getInterceptors() {
+		return this.interceptors;
+	}
+
+	public List<Class<?>> getControllers() {
+		return this.controllers;
 	}
 
 	public synchronized void clear() {
 		Aop.clear();
 		this.servletContext = null;
-		this.loaderClass = null;
+		this.loaderClasses.clear();
 		this.allClasses.clear();
 		this.interceptors.clear();
 		this.controllers.clear();

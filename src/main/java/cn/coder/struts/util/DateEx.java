@@ -36,7 +36,7 @@ public final class DateEx {
 		if (withTime)
 			format.append(" ").append("HH:mm:ss").toString();
 		c.setTime(new Date());
-		if (amount > 0 && unit != null) {
+		if (amount != 0 && unit != null) {
 			switch (unit) {
 			case YEAR:
 				c.add(Calendar.YEAR, amount);
