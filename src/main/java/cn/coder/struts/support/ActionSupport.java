@@ -21,9 +21,9 @@ import cn.coder.struts.wrapper.SessionWrapper;
 public abstract class ActionSupport implements processFile {
 	private static final Logger logger = LoggerFactory.getLogger(ActionSupport.class);
 
-	private HttpSession session;
-	private HttpServletRequest request;
-	private HttpServletResponse response;
+	protected HttpSession session;
+	protected HttpServletRequest request;
+	protected HttpServletResponse response;
 	private MultipartRequestWrapper multipartWrapper;
 
 	public void init(HttpServletRequest req, HttpServletResponse res) {
@@ -100,6 +100,11 @@ public abstract class ActionSupport implements processFile {
 				logger.error("getPostData faild", e);
 			return null;
 		}
+	}
+
+	protected String getServerName() {
+		return request.getScheme() + "://" + request.getServerName()
+				+ (request.getLocalPort() == 80 ? "" : request.getLocalPort());
 	}
 
 	protected String getRemoteAddr() {

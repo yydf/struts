@@ -97,7 +97,7 @@ public final class ActionHandler {
 	}
 
 	public void handle(Action action, HttpServletRequest req, HttpServletResponse res) throws IOException {
-		if (!req.getMethod().equals(action.getHttpMethod())) {
+		if (!action.getHttpMethod().equals("ALL") && !req.getMethod().equals(action.getHttpMethod())) {
 			if (logger.isDebugEnabled())
 				logger.debug("Action '{}' not allowed '{}'", req.getServletPath(), req.getMethod());
 			res.sendError(405);

@@ -19,7 +19,7 @@ public @interface Request {
 	HttpMethod method() default HttpMethod.GET;
 
 	public enum HttpMethod {
-		GET, POST, PUT
+		GET, POST, PUT, ALL
 	}
 
 }
