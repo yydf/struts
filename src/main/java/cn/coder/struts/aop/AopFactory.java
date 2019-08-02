@@ -17,11 +17,11 @@ import cn.coder.struts.util.BeanUtils;
 public final class AopFactory {
 	private static final Logger logger = LoggerFactory.getLogger(AopFactory.class);
 
-	private static List<Class<?>> allClasses;
+	private static Class<?>[] allClasses;
 	private final HashMap<Field, Class<?>> maps = new HashMap<>();
 	private final List<Class<?>> noInject = new ArrayList<>();
 
-	public synchronized static void init(List<Class<?>> classes) {
+	public synchronized static void init(Class<?>[] classes) {
 		allClasses = classes;
 	}
 
@@ -83,7 +83,6 @@ public final class AopFactory {
 		maps.clear();
 		noInject.clear();
 		if (allClasses != null) {
-			allClasses.clear();
 			allClasses = null;
 		}
 		if (logger.isDebugEnabled())

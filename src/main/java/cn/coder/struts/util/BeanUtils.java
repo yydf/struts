@@ -7,8 +7,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import cn.coder.struts.annotation.Before;
-
 public final class BeanUtils {
 	private static final ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat>() {
 		@Override
@@ -63,21 +61,6 @@ public final class BeanUtils {
 		}
 	}
 
-	public static Class<?>[] mergeInterceptor(Before b1, Before b2) {
-		if (b1 == null && b2 == null)
-			return new Class<?>[0];
-		if (b1 == null || b1.value().length == 0)
-			return b2.value();
-		if (b2 == null || b2.value().length == 0)
-			return b1.value();
-		Class<?>[] arr1 = b1.value();
-		Class<?>[] arr2 = b2.value();
-		Class<?>[] arr = new Class<?>[arr1.length + arr2.length];
-		System.arraycopy(arr1, 0, arr, 0, arr1.length);
-		System.arraycopy(arr2, 0, arr, arr1.length, arr2.length);
-		return arr;
-	}
-
 	public static Set<Field> getDeclaredFields(Class<?> clazz) {
 		Set<Field> fieldList = new HashSet<>();
 		getDeclaredFields(clazz, fieldList);
@@ -91,6 +74,14 @@ public final class BeanUtils {
 				fieldList.add(field);
 			}
 			getDeclaredFields(clazz.getSuperclass(), fieldList);
+		}
+	}
+
+	public static Class<?> toClass(String className) {
+		try {
+			return Class.forName(className);
+		} catch (ClassNotFoundException e) {
+			return null;
 		}
 	}
 

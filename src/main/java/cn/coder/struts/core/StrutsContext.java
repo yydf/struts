@@ -6,17 +6,15 @@ import java.util.Set;
 
 import javax.servlet.ServletContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import cn.coder.struts.aop.Aop;
 import cn.coder.struts.support.ActionSupport;
 import cn.coder.struts.support.Interceptor;
 import cn.coder.struts.support.StrutsLoader;
+import cn.coder.struts.util.ContextUtils;
+import cn.coder.struts.wrapper.OrderWrapper;
 
 public final class StrutsContext {
-	private static final Logger logger = LoggerFactory.getLogger(StrutsContext.class);
-
+	
 	private ServletContext servletContext;
 	private final List<Class<?>> loaderClasses = new ArrayList<>();
 	private final List<Class<?>> allClasses = new ArrayList<>();
@@ -27,29 +25,26 @@ public final class StrutsContext {
 		this.servletContext = ctx;
 	}
 
+	public void scanPaths(String parent) {
+		ContextUtils.scanPaths(this, parent);
+	}
+	
 	public Set<String> getResourcePaths(String path) {
 		return this.servletContext.getResourcePaths(path);
 	}
 
-	public void split(String className) {
-		try {
-			Class<?> clazz = Class.forName(className);
-			if (clazz != null) {
-				allClasses.add(clazz);
-				if (StrutsLoader.class.isAssignableFrom(clazz))
-					addClass(loaderClasses, clazz);
-				else if (Interceptor.class.isAssignableFrom(clazz))
-					addClass(interceptors, clazz);
-				else if (ActionSupport.class.isAssignableFrom(clazz))
-					addClass(controllers, clazz);
-				else {
+	public void group(Class<?> clazz) {
+		if (clazz != null) {
+			if (StrutsLoader.class.isAssignableFrom(clazz))
+				addClass(loaderClasses, clazz);
+			else if (Interceptor.class.isAssignableFrom(clazz))
+				addClass(interceptors, clazz);
+			else if (ActionSupport.class.isAssignableFrom(clazz))
+				addClass(controllers, clazz);
+			else {
 
-				}
-				addClass(allClasses, clazz);
 			}
-		} catch (ClassNotFoundException e) {
-			if (logger.isErrorEnabled())
-				logger.error("Path '{}' not found", className);
+			addClass(allClasses, clazz);
 		}
 	}
 
@@ -58,20 +53,29 @@ public final class StrutsContext {
 			classes.add(clazz);
 	}
 
-	public List<Class<?>> getLoaderClass() {
-		return this.loaderClasses;
+	public void sortClass() {
+		OrderWrapper.sort(loaderClasses);
+		OrderWrapper.sort(interceptors);
 	}
 
-	public List<Class<?>> getAllClasses() {
-		return this.allClasses;
+	public Class<?>[] getLoaderClass() {
+		Class<?>[] classes = new Class<?>[this.loaderClasses.size()];
+		return this.loaderClasses.toArray(classes);
 	}
 
-	public List<Class<?>> getInterceptors() {
-		return this.interceptors;
+	public Class<?>[] getAllClasses() {
+		Class<?>[] classes = new Class<?>[this.allClasses.size()];
+		return this.allClasses.toArray(classes);
 	}
 
-	public List<Class<?>> getControllers() {
-		return this.controllers;
+	public Class<?>[] getInterceptors() {
+		Class<?>[] classes = new Class<?>[this.interceptors.size()];
+		return this.interceptors.toArray(classes);
+	}
+
+	public Class<?>[] getControllers() {
+		Class<?>[] classes = new Class<?>[this.controllers.size()];
+		return this.controllers.toArray(classes);
 	}
 
 	public synchronized void clear() {
@@ -82,5 +86,4 @@ public final class StrutsContext {
 		this.interceptors.clear();
 		this.controllers.clear();
 	}
-
 }

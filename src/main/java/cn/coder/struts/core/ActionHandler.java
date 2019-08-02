@@ -6,7 +6,6 @@ import java.lang.reflect.Parameter;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 
 import javax.servlet.DispatcherType;
@@ -24,7 +23,7 @@ import cn.coder.struts.annotation.Request;
 import cn.coder.struts.annotation.Skip;
 import cn.coder.struts.aop.Aop;
 import cn.coder.struts.support.ActionSupport;
-import cn.coder.struts.util.BeanUtils;
+import cn.coder.struts.util.ContextUtils;
 import cn.coder.struts.wrapper.ResponseWrapper;
 
 public final class ActionHandler {
@@ -33,9 +32,9 @@ public final class ActionHandler {
 	private HashMap<String, Action> mappings = new HashMap<>();
 	private ResponseWrapper responseWrapper = new ResponseWrapper();
 
-	public ActionHandler(List<Class<?>> controllers) {
-		if (controllers != null && !controllers.isEmpty()) {
-			for (Class<?> clazz : controllers) {
+	public ActionHandler(Class<?>[] classes) {
+		if (classes.length > 0) {
+			for (Class<?> clazz : classes) {
 				mappingActions(clazz);
 			}
 		}
@@ -49,25 +48,13 @@ public final class ActionHandler {
 			for (Method method : methods) {
 				req2 = method.getAnnotation(Request.class);
 				if (req2 != null) {
-					mappings.put(genericPath(req, req2), new Action(method));
+					mappings.put(ContextUtils.genericPath(req, req2), new Action(method));
 				}
 			}
 		}
 	}
 
-	private static String genericPath(Request req, Request req2) {
-		String path = req2.value().startsWith("/") ? req2.value() : "/" + req2.value();
-		if (path.startsWith("~"))
-			return path.substring(1);
-		if (req == null)
-			return path;
-		String base = req.value().startsWith("/") ? req.value() : "/" + req.value();
-		return base + path;
-	}
-
-	public void buildInterceptors(List<Class<?>> interceptors) {
-		Class<?>[] all = new Class<?>[interceptors.size()];
-		interceptors.toArray(all);
+	public void buildInterceptors(Class<?>[] interceptors) {
 		Collection<Action> actions = mappings.values();
 		Before before;
 		for (Action action : actions) {
@@ -81,10 +68,10 @@ public final class ActionHandler {
 			} else {
 				// Action没有Skip，但是Controller有Skip注解，取Controller和Action自己的注解
 				if (action.getController().getAnnotation(Skip.class) != null) {
-					action.setInterceptors(BeanUtils.mergeInterceptor(action.getController().getAnnotation(Before.class),
+					action.setInterceptors(ContextUtils.mergeInterceptor(action.getController().getAnnotation(Before.class),
 							action.getMethod().getAnnotation(Before.class)));
 				} else {// 都没有Skip,设置全部的拦截器
-					action.setInterceptors(all);
+					action.setInterceptors(interceptors);
 				}
 			}
 		}

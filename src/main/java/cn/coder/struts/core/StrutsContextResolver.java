@@ -8,14 +8,13 @@ import javax.servlet.ServletContext;
 import cn.coder.struts.aop.Aop;
 import cn.coder.struts.aop.AopFactory;
 import cn.coder.struts.support.StrutsLoader;
-import cn.coder.struts.wrapper.OrderWrapper;
 
 public final class StrutsContextResolver {
 
 	private StrutsContext context;
 	private ServletContext servletContext;
 	private List<StrutsLoader> loaders;
-	private List<Class<?>> interceptors;
+	private Class<?>[] interceptors;
 	private ActionHandler handler;
 
 	public StrutsContextResolver(ServletContext ctx) {
@@ -35,12 +34,11 @@ public final class StrutsContextResolver {
 	}
 
 	private void initLoader() {
-		List<Class<?>> loaderClass = context.getLoaderClass();
-		if (!loaderClass.isEmpty()) {
-			OrderWrapper.sort(loaderClass);
-			this.loaders = new ArrayList<>(loaderClass.size());
-			for (int i = 0; i < loaderClass.size(); i++) {
-				this.loaders.add((StrutsLoader) Aop.create(loaderClass.get(i)));
+		Class<?>[] loaderClass = context.getLoaderClass();
+		if (loaderClass.length > 0) {
+			this.loaders = new ArrayList<>(loaderClass.length);
+			for (int i = 0; i < loaderClass.length; i++) {
+				this.loaders.add((StrutsLoader) Aop.create(loaderClass[i]));
 			}
 		}
 	}
@@ -69,7 +67,7 @@ public final class StrutsContextResolver {
 
 	public synchronized void destroy() {
 		this.servletContext = null;
-		this.interceptors.clear();
+		this.interceptors = null;
 		this.handler.clear();
 		if (this.loaders != null) {
 			for (StrutsLoader loader : loaders) {
