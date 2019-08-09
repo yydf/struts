@@ -10,6 +10,7 @@ import cn.coder.struts.aop.Aop;
 import cn.coder.struts.support.ActionSupport;
 import cn.coder.struts.support.Interceptor;
 import cn.coder.struts.support.StrutsLoader;
+import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.util.ContextUtils;
 import cn.coder.struts.wrapper.OrderWrapper;
 
@@ -59,23 +60,19 @@ public final class StrutsContext {
 	}
 
 	public Class<?>[] getLoaderClass() {
-		Class<?>[] classes = new Class<?>[this.loaderClasses.size()];
-		return this.loaderClasses.toArray(classes);
+		return BeanUtils.toArray(this.loaderClasses);
 	}
 
 	public Class<?>[] getAllClasses() {
-		Class<?>[] classes = new Class<?>[this.allClasses.size()];
-		return this.allClasses.toArray(classes);
+		return BeanUtils.toArray(this.allClasses);
 	}
 
 	public Class<?>[] getInterceptors() {
-		Class<?>[] classes = new Class<?>[this.interceptors.size()];
-		return this.interceptors.toArray(classes);
+		return BeanUtils.toArray(this.interceptors);
 	}
 
 	public Class<?>[] getControllers() {
-		Class<?>[] classes = new Class<?>[this.controllers.size()];
-		return this.controllers.toArray(classes);
+		return BeanUtils.toArray(this.controllers);
 	}
 
 	public synchronized void clear() {

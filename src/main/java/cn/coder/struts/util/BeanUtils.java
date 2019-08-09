@@ -5,6 +5,7 @@ import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public final class BeanUtils {
@@ -83,6 +84,11 @@ public final class BeanUtils {
 		} catch (ClassNotFoundException e) {
 			return null;
 		}
+	}
+
+	public static Class<?>[] toArray(List<Class<?>> classes) {
+		Class<?>[] array = new Class<?>[classes.size()];
+		return classes.toArray(array);
 	}
 
 }
