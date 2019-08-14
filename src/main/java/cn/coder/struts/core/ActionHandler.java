@@ -3,10 +3,9 @@ package cn.coder.struts.core;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Set;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -21,10 +20,14 @@ import cn.coder.struts.annotation.Before;
 import cn.coder.struts.annotation.Param;
 import cn.coder.struts.annotation.Request;
 import cn.coder.struts.annotation.Skip;
+import cn.coder.struts.annotation.With;
 import cn.coder.struts.aop.Aop;
 import cn.coder.struts.support.ActionSupport;
+import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.util.ContextUtils;
 import cn.coder.struts.wrapper.ResponseWrapper;
+
+import static cn.coder.struts.util.ContextUtils.mergeInterceptor;
 
 public final class ActionHandler {
 	private static final Logger logger = LoggerFactory.getLogger(ActionHandler.class);
@@ -32,62 +35,66 @@ public final class ActionHandler {
 	private HashMap<String, Action> mappings = new HashMap<>();
 	private ResponseWrapper responseWrapper = new ResponseWrapper();
 
-	public ActionHandler(Class<?>[] classes) {
-		if (classes.length > 0) {
-			for (Class<?> clazz : classes) {
-				mappingActions(clazz);
-			}
+	public synchronized void init(Class<?>[] controllers, Class<?>[] interceptors, FilterRegistration registration) {
+		// 增加全局Filter
+		EnumSet<DispatcherType> dispatcherTypes = EnumSet.allOf(DispatcherType.class);
+		dispatcherTypes.add(DispatcherType.REQUEST);
+		dispatcherTypes.add(DispatcherType.FORWARD);
+
+		for (Class<?> clazz : controllers) {
+			mappingActions(clazz, interceptors, dispatcherTypes, registration);
 		}
+		if (logger.isDebugEnabled())
+			logger.debug("Init {} actions", mappings.size());
 	}
 
-	private void mappingActions(Class<?> clazz) {
+	private void mappingActions(Class<?> clazz, Class<?>[] interceptors, EnumSet<DispatcherType> dispatcherTypes,
+			FilterRegistration registration) {
 		Request req = clazz.getAnnotation(Request.class);
 		Method[] methods = clazz.getDeclaredMethods();
-		if (methods.length > 0) {
-			Request req2;
-			for (Method method : methods) {
-				req2 = method.getAnnotation(Request.class);
-				if (req2 != null) {
-					mappings.put(ContextUtils.genericPath(req, req2), new Action(method));
-				}
+		for (Method method : methods) {
+			Request req2 = method.getAnnotation(Request.class);
+			if (req2 != null) {
+				String path = ContextUtils.genericPath(req, req2);
+				if (logger.isDebugEnabled())
+					logger.debug("Build action '{}' from '{}.{}'", path, clazz.getName(), method.getName());
+				Action action = new Action(method);
+				buildInterceptors(action, clazz, interceptors);
+				mappings.put(path, action);
+				registration.addMappingForUrlPatterns(dispatcherTypes, true, path);
 			}
 		}
 	}
 
-	public void buildInterceptors(Class<?>[] interceptors) {
-		Collection<Action> actions = mappings.values();
+	private static void buildInterceptors(Action action, Class<?> controller, Class<?>[] interceptors) {
 		Before before;
-		for (Action action : actions) {
-			// 如果跳过拦截器，拦截器全部清除，只保留本函数@Before的拦截器
-			if (action.getMethod().getAnnotation(Skip.class) != null) {
-				before = action.getMethod().getAnnotation(Before.class);
-				if (before == null)
-					action.setInterceptors(new Class<?>[0]);
-				else
-					action.setInterceptors(before.value());
-			} else {
-				// Action没有Skip，但是Controller有Skip注解，取Controller和Action自己的注解
-				if (action.getController().getAnnotation(Skip.class) != null) {
-					action.setInterceptors(ContextUtils.mergeInterceptor(action.getController().getAnnotation(Before.class),
-							action.getMethod().getAnnotation(Before.class)));
-				} else {// 都没有Skip,设置全部的拦截器
-					action.setInterceptors(interceptors);
+		// 如果跳过拦截器，拦截器全部清除，只保留本函数@Before的拦截器
+		if (action.getMethod().getAnnotation(Skip.class) != null) {
+			before = action.getMethod().getAnnotation(Before.class);
+			if (before == null)
+				action.setInterceptors(new Class<?>[0]);
+			else
+				action.setInterceptors(before.value());
+		} else {
+			// Action没有Skip，但是Controller有Skip注解，取Controller和Action自己的注解
+			if (controller.getAnnotation(Skip.class) != null) {
+				action.setInterceptors(mergeInterceptor(controller.getAnnotation(Before.class),
+						action.getMethod().getAnnotation(Before.class)));
+			} else {// 都没有Skip,设置全部的拦截器
+				ArrayList<Class<?>> all = new ArrayList<>();
+				for (Class<?> inter : interceptors) {
+					With with = inter.getAnnotation(With.class);
+					if (with != null && with.value().length > 0) {
+						for (Class<? extends ActionSupport> target : with.value()) {
+							if (controller.equals(target)) {
+								all.add(inter);
+							}
+						}
+					} else {
+						all.add(inter);
+					}
 				}
-			}
-		}
-	}
-
-	
-
-	public void registerPath(FilterRegistration filterRegistration) {
-		Set<String> paths = mappings.keySet();
-		if (!paths.isEmpty()) {
-			// 增加全局Filter
-			EnumSet<DispatcherType> dispatcherTypes = EnumSet.allOf(DispatcherType.class);
-			dispatcherTypes.add(DispatcherType.REQUEST);
-			dispatcherTypes.add(DispatcherType.FORWARD);
-			for (String path : paths) {
-				filterRegistration.addMappingForUrlPatterns(dispatcherTypes, true, path);
+				action.setInterceptors(BeanUtils.toArray(all));
 			}
 		}
 	}

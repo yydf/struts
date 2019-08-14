@@ -3,6 +3,7 @@ package cn.coder.struts.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 
 import cn.coder.struts.aop.Aop;
@@ -48,9 +49,10 @@ public final class StrutsContextResolver {
 	}
 
 	private void initHandler() {
-		this.handler = new ActionHandler(context.getControllers());
-		this.handler.buildInterceptors(this.interceptors);
-		this.handler.registerPath(servletContext.getFilterRegistration("StrutsFilter"));
+		FilterRegistration registration = servletContext.getFilterRegistration("StrutsFilter");
+		Class<?>[] controllers = context.getControllers();
+		this.handler = new ActionHandler();
+		this.handler.init(controllers, this.interceptors, registration);
 	}
 
 	public synchronized void start() {

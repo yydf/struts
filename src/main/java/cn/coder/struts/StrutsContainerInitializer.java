@@ -21,7 +21,7 @@ public final class StrutsContainerInitializer implements ServletContainerInitial
 
 	@Override
 	public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException {
-		long start = System.currentTimeMillis();
+		ctx.setAttribute("__start", System.currentTimeMillis());
 
 		// 扫描classes，获取Context
 		StrutsContext context = new StrutsContext(ctx);
@@ -40,7 +40,7 @@ public final class StrutsContainerInitializer implements ServletContainerInitial
 		ctx.addFilter("StrutsFilter", StrutsFilter.class);
 
 		if (logger.isDebugEnabled())
-			logger.debug("Struts container started with {}ms", (System.currentTimeMillis() - start));
+			logger.debug("Build context");
 	}
 
 }
