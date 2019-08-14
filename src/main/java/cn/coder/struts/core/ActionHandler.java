@@ -25,7 +25,6 @@ import cn.coder.struts.aop.Aop;
 import cn.coder.struts.support.ActionSupport;
 import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.util.ContextUtils;
-import cn.coder.struts.wrapper.ResponseWrapper;
 
 import static cn.coder.struts.util.ContextUtils.mergeInterceptor;
 
@@ -33,7 +32,6 @@ public final class ActionHandler {
 	private static final Logger logger = LoggerFactory.getLogger(ActionHandler.class);
 
 	private HashMap<String, Action> mappings = new HashMap<>();
-	private ResponseWrapper responseWrapper = new ResponseWrapper();
 
 	public synchronized void init(Class<?>[] controllers, Class<?>[] interceptors, FilterRegistration registration) {
 		// 增加全局Filter
@@ -44,8 +42,6 @@ public final class ActionHandler {
 		for (Class<?> clazz : controllers) {
 			mappingActions(clazz, interceptors, dispatcherTypes, registration);
 		}
-		if (logger.isDebugEnabled())
-			logger.debug("Init {} actions", mappings.size());
 	}
 
 	private void mappingActions(Class<?> clazz, Class<?>[] interceptors, EnumSet<DispatcherType> dispatcherTypes,
@@ -103,31 +99,37 @@ public final class ActionHandler {
 		return mappings.get(path);
 	}
 
-	public void handle(Action action, HttpServletRequest req, HttpServletResponse res) throws IOException {
-		if (!action.getHttpMethod().equals("ALL") && !req.getMethod().equals(action.getHttpMethod())) {
+	public int getActionNum() {
+		return mappings.size();
+	}
+
+	public Object handle(Action action, HttpServletRequest req, HttpServletResponse res) {
+		if (!action.sameMethod(req.getMethod())) {
 			if (logger.isDebugEnabled())
 				logger.debug("Action '{}' not allowed '{}'", req.getServletPath(), req.getMethod());
-			res.sendError(405);
-			return;
+			try {
+				res.sendError(405);
+			} catch (IOException e) {
+				logger.error("Send 405 faild", e);
+			}
+			return null;
 		}
 		Invocation inv = new Invocation(req, res, action);
 		if (!inv.complete()) {
 			if (logger.isDebugEnabled())
 				logger.debug("Action stoped by interceptor '{}'", inv.current().getName());
-			return;
+			return null;
 		}
 		ActionSupport support = null;
 		try {
 			support = (ActionSupport) Aop.create(action.getController());
 			support.init(req, res);
 			Object[] args = buildArgs(action, support, req, res);
-			Object result = action.getMethod().invoke(support, args);
-			if (result != null) {
-				responseWrapper.doResponse(result, req, res);
-			}
+			return action.getMethod().invoke(support, args);
 		} catch (Exception e) {
 			if (logger.isErrorEnabled())
 				logger.error("Handle action faild", e);
+			return null;
 		} finally {
 			if (support != null) {
 				support.clear();

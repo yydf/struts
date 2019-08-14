@@ -13,12 +13,12 @@ public final class Action {
 	private final Method method;
 	private final Parameter[] parameters;
 	private final Class<?> controller;
-	private final HttpMethod httpMethod;
+	private final HttpMethod[] httpMethods;
 	private ArrayList<Class<?>> interceptors;
 
 	public Action(Method method) {
 		this.method = method;
-		this.httpMethod = method.getAnnotation(Request.class).method();
+		this.httpMethods = method.getAnnotation(Request.class).method();
 		this.parameters = method.getParameters();
 		this.controller = method.getDeclaringClass();
 	}
@@ -52,8 +52,12 @@ public final class Action {
 		return this.interceptors;
 	}
 
-	public String getHttpMethod() {
-		return this.httpMethod.name();
+	public boolean sameMethod(String method) {
+		for (HttpMethod httpMethod : httpMethods) {
+			if(httpMethod.name().equals(method))
+				return true;
+		}
+		return false;
 	}
 
 }

@@ -1,4 +1,4 @@
-package cn.coder.struts.wrapper;
+package cn.coder.struts.core;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,14 +15,22 @@ import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.view.JSONMap;
 import cn.coder.struts.view.ModelAndView;
 
-public final class ResponseWrapper {
-	private static final Logger logger = LoggerFactory.getLogger(ResponseWrapper.class);
-	
-	private static final int LOG_LIMIIT = 1024;
-	private static final String CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
-	private static final String CONTENT_TYPE_TEXT = "text/plain;charset=UTF-8";
+public final class ViewHandler {
+	private static final Logger logger = LoggerFactory.getLogger(ViewHandler.class);
 
-	public void doResponse(Object result, HttpServletRequest req, HttpServletResponse res)
+	private final String encoding;
+	private final String CONTENT_TYPE_JSON;
+	private final String CONTENT_TYPE_TEXT;
+
+	private static final int LOG_LIMIIT = 1024;
+
+	public ViewHandler(String encoding) {
+		this.encoding = encoding;
+		CONTENT_TYPE_JSON = String.format("application/json;charset=%s", encoding);
+		CONTENT_TYPE_TEXT = String.format("text/plain;charset=%s", encoding);
+	}
+
+	public void handle(Object result, HttpServletRequest req, HttpServletResponse res)
 			throws IOException, ServletException {
 		boolean supportGzip = isSupportGZip(req);
 		if (result instanceof JSONMap) {
@@ -31,7 +39,7 @@ public final class ResponseWrapper {
 			String callback = req.getParameter("callback");
 			if (!StringUtils.isEmpty(callback))
 				json = callback + "(" + json + ")";
-			renderText(json, supportGzip, res);
+			renderText(json, this.encoding, supportGzip, res);
 			((JSONMap) result).clear();
 			if (logger.isDebugEnabled()) {
 				if (json.length() > LOG_LIMIIT)
@@ -42,7 +50,7 @@ public final class ResponseWrapper {
 		} else if (result instanceof String) {
 			res.setContentType(CONTENT_TYPE_TEXT);
 			String text = result.toString();
-			renderText(text, supportGzip, res);
+			renderText(text, this.encoding, supportGzip, res);
 			if (logger.isDebugEnabled()) {
 				if (text.length() > LOG_LIMIIT)
 					logger.debug("[TEXT]" + text.substring(0, LOG_LIMIIT) + "...");
@@ -56,8 +64,8 @@ public final class ResponseWrapper {
 	}
 
 	private static boolean isSupportGZip(HttpServletRequest req) {
-		String encoding = req.getHeader("Accept-Encoding");
-		return encoding != null && encoding.indexOf("gzip") > -1;
+		String accept = req.getHeader("Accept-Encoding");
+		return accept != null && accept.indexOf("gzip") > -1;
 	}
 
 	private static void renderView(ModelAndView mav, HttpServletRequest req, HttpServletResponse res)
@@ -73,13 +81,14 @@ public final class ResponseWrapper {
 			logger.debug("Forward to " + view);
 	}
 
-	private static void renderText(String text, boolean supportGzip, HttpServletResponse res) throws IOException {
+	private static void renderText(String text, String encoding, boolean supportGzip, HttpServletResponse res)
+			throws IOException {
 		int len = text.length();
 		if (supportGzip && len > 512) {
 			long start = System.nanoTime();
 			res.addHeader("Content-Encoding", "gzip");
 			GZIPOutputStream output = new GZIPOutputStream(res.getOutputStream());
-			output.write(text.getBytes("utf-8"));
+			output.write(text.getBytes(encoding));
 			output.close();
 			output.finish();
 			if (logger.isDebugEnabled())

@@ -16,10 +16,10 @@ public @interface Request {
 
 	String value();
 
-	HttpMethod method() default HttpMethod.GET;
+	HttpMethod[] method() default HttpMethod.GET;
 
 	public enum HttpMethod {
-		GET, POST, PUT, ALL
+		GET, POST, PUT
 	}
 
 }
