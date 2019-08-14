@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import cn.coder.struts.annotation.Request;
 import cn.coder.struts.annotation.Request.HttpMethod;
+import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.wrapper.OrderWrapper;
 
 public final class Action {
@@ -14,7 +15,7 @@ public final class Action {
 	private final Parameter[] parameters;
 	private final Class<?> controller;
 	private final HttpMethod[] httpMethods;
-	private ArrayList<Class<?>> interceptors;
+	private Class<?>[] interceptors;
 
 	public Action(Method method) {
 		this.method = method;
@@ -38,17 +39,18 @@ public final class Action {
 	public void setInterceptors(Class<?>[] classes) {
 		if (classes.length > 0) {
 			// 去重
-			this.interceptors = new ArrayList<>();
+			ArrayList<Class<?>> temp = new ArrayList<>();
 			for (Class<?> clazz : classes) {
-				if (!this.interceptors.contains(clazz))
-					this.interceptors.add(clazz);
+				if (!temp.contains(clazz))
+					temp.add(clazz);
 			}
 			// 排序
-			OrderWrapper.sort(this.interceptors);
+			OrderWrapper.sort(temp);
+			this.interceptors = BeanUtils.toArray(temp);
 		}
 	}
 
-	public ArrayList<Class<?>> getInterceptors() {
+	public Class<?>[] getInterceptors() {
 		return this.interceptors;
 	}
 

@@ -110,9 +110,11 @@ public final class StrutsContextResolver {
 	}
 
 	public synchronized void destroy() {
+		this.encoding = null;
 		this.servletContext = null;
 		this.interceptors = null;
 		this.handler.clear();
+		this.viewHandler = null;
 		if (this.loaders != null) {
 			for (StrutsLoader loader : loaders) {
 				loader.destroy();

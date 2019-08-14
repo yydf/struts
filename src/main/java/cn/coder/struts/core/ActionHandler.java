@@ -105,13 +105,7 @@ public final class ActionHandler {
 
 	public Object handle(Action action, HttpServletRequest req, HttpServletResponse res) {
 		if (!action.sameMethod(req.getMethod())) {
-			if (logger.isDebugEnabled())
-				logger.debug("Action '{}' not allowed '{}'", req.getServletPath(), req.getMethod());
-			try {
-				res.sendError(405);
-			} catch (IOException e) {
-				logger.error("Send 405 faild", e);
-			}
+			sendError(405, res);
 			return null;
 		}
 		Invocation inv = new Invocation(req, res, action);
@@ -127,13 +121,21 @@ public final class ActionHandler {
 			Object[] args = buildArgs(action, support, req, res);
 			return action.getMethod().invoke(support, args);
 		} catch (Exception e) {
-			if (logger.isErrorEnabled())
-				logger.error("Handle action faild", e);
+			logger.error("Handle action faild", e);
+			sendError(500, res);
 			return null;
 		} finally {
 			if (support != null) {
 				support.clear();
 			}
+		}
+	}
+
+	private static void sendError(int code, HttpServletResponse res) {
+		try {
+			res.sendError(code);
+		} catch (IOException e) {
+			logger.error("Send error {} faild", code);
 		}
 	}
 

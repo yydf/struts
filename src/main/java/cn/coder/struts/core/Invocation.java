@@ -1,7 +1,5 @@
 package cn.coder.struts.core;
 
-import java.util.ArrayList;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -10,26 +8,25 @@ import cn.coder.struts.support.Interceptor;
 
 public final class Invocation {
 
-	private int size;
-	private int num = -1;
-	private Action action;
-	private HttpServletRequest request;
-	private HttpServletResponse response;
-	private ArrayList<Class<?>> interceptors;
+	private int cur = 0;
+	private final int size;
+	private final Action action;
+	private final HttpServletRequest request;
+	private final HttpServletResponse response;
+	private final Class<?>[] interceptors;
 
 	public Invocation(HttpServletRequest req, HttpServletResponse res, Action action) {
 		this.request = req;
 		this.response = res;
 		this.action = action;
 		this.interceptors = action.getInterceptors();
-		this.size = (this.interceptors != null ? this.interceptors.size() : 0);
+		this.size = this.interceptors.length;
 		next();
 	}
 
 	public void next() {
-		this.num++;
-		if (this.num < size) {
-			((Interceptor) Aop.create(interceptors.get(this.num))).intercept(this);
+		if (this.cur < size) {
+			((Interceptor) Aop.create(interceptors[this.cur++])).intercept(this);
 		}
 	}
 
@@ -44,13 +41,13 @@ public final class Invocation {
 	public HttpServletResponse getResponse() {
 		return this.response;
 	}
-	
+
 	public boolean complete() {
-		return this.num == size;
+		return this.cur == size;
 	}
 
 	public Class<?> current() {
-		return interceptors.get(this.num);
+		return interceptors[this.cur];
 	}
 
 }
