@@ -20,7 +20,7 @@ public final class Invocation {
 		this.response = res;
 		this.action = action;
 		this.interceptors = action.getInterceptors();
-		this.size = this.interceptors.length;
+		this.size = (this.interceptors == null ? 0 : this.interceptors.length);
 		next();
 	}
 
