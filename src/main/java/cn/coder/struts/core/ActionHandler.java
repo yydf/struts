@@ -53,7 +53,7 @@ public final class ActionHandler {
 			if (req2 != null) {
 				String path = ContextUtils.genericPath(req, req2);
 				if (logger.isDebugEnabled())
-					logger.debug("Build action '{}' from '{}.{}'", path, clazz.getName(), method.getName());
+					logger.debug("Build action '{}' from '{}.{}'", path, clazz.getSimpleName(), method.getName());
 				Action action = new Action(method);
 				buildInterceptors(action, clazz, interceptors);
 				mappings.put(path, action);

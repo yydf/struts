@@ -2,6 +2,8 @@ package cn.coder.struts.wrapper;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -182,6 +184,7 @@ public final class JSONWrapper {
 
 	private static boolean isNumber(Object obj) {
 		return obj instanceof Integer || obj instanceof Boolean || obj instanceof Double || obj instanceof Long
-				|| obj instanceof Byte || obj instanceof Float || obj instanceof Short;
+				|| obj instanceof Byte || obj instanceof Float || obj instanceof Short || obj instanceof BigDecimal
+				|| obj instanceof BigInteger;
 	}
 }
