@@ -31,9 +31,11 @@ import static cn.coder.struts.util.ContextUtils.mergeInterceptor;
 public final class ActionHandler {
 	private static final Logger logger = LoggerFactory.getLogger(ActionHandler.class);
 
+	private Class<?>[] controllers;
 	private HashMap<String, Action> mappings = new HashMap<>();
 
 	public synchronized void init(Class<?>[] controllers, Class<?>[] interceptors, FilterRegistration registration) {
+		this.controllers = controllers;
 		// 增加全局Filter
 		EnumSet<DispatcherType> dispatcherTypes = EnumSet.allOf(DispatcherType.class);
 		dispatcherTypes.add(DispatcherType.REQUEST);
@@ -95,7 +97,20 @@ public final class ActionHandler {
 		}
 	}
 
-	public Action getAction(String path) {
+	public void bindSwagger(FilterRegistration registration, String requestUrl) {
+		// 将swagger的链接，注册到filter
+		registration.addMappingForUrlPatterns(null, false, requestUrl);
+	}
+
+	public Class<?>[] getControllers() {
+		return this.controllers;
+	}
+
+	public HashMap<String, Action> getActions() {
+		return this.mappings;
+	}
+
+	public final Action getAction(String path) {
 		return mappings.get(path);
 	}
 

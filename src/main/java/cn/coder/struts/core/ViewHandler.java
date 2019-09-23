@@ -40,7 +40,6 @@ public final class ViewHandler {
 			if (!StringUtils.isEmpty(callback))
 				json = callback + "(" + json + ")";
 			renderText(json, this.encoding, supportGzip, res);
-			((JSONMap) result).clear();
 			if (logger.isDebugEnabled()) {
 				if (json.length() > LOG_LIMIIT)
 					logger.debug("[JSON]" + json.substring(0, LOG_LIMIIT) + "...");

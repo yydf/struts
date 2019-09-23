@@ -62,4 +62,8 @@ public final class Action {
 		return false;
 	}
 
+	public HttpMethod[] getAllowMethods() {
+		return this.httpMethods;
+	}
+
 }

@@ -40,6 +40,10 @@ public final class JSONWrapper {
 
 	public String write(Map<String, Object> jsonMap) {
 		try {
+			if (json.length() > 0) {
+				json.setLength(0);
+				logger.debug("Reset json length");
+			}
 			appendMap(jsonMap);
 		} catch (RuntimeException e) {
 			if (logger.isErrorEnabled())
@@ -60,7 +64,7 @@ public final class JSONWrapper {
 	}
 
 	private void appendObj(String key, Object obj, boolean hasNext) {
-		if (obj == null || STR_VERSION_UID.equals(key))
+		if (obj == null || STR_VERSION_UID.equals(key) || "this$0".equals(key))
 			return;
 		if (key != null)
 			json.append(MARKS).append(key).append(MARKS).append(COLON);

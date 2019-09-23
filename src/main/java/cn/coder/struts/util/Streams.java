@@ -21,107 +21,47 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.Properties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for working with streams.
  */
 public final class Streams {
+	private static final Logger logger = LoggerFactory.getLogger(Streams.class);
 
-	/**
-	 * Default buffer size for use in
-	 * {@link #copy(InputStream, OutputStream, boolean)}.
-	 */
-	private static final int DEFAULT_BUFFER_SIZE = 8192;
+	private static final byte[] BYTE_BUFFER = new byte[8192];
+	private static final char[] CHAR_BUFFER = new char[8192];
 
-	/**
-	 * Copies the contents of the given {@link InputStream} to the given
-	 * {@link OutputStream}. Shortcut for
-	 * 
-	 * <pre>
-	 * copy(pInputStream, pOutputStream, new byte[8192]);
-	 * </pre>
-	 *
-	 * @param inputStream
-	 *            The input stream, which is being read. It is guaranteed, that
-	 *            {@link InputStream#close()} is called on the stream.
-	 * @param outputStream
-	 *            The output stream, to which data should be written. May be
-	 *            null, in which case the input streams contents are simply
-	 *            discarded.
-	 * @param closeOutputStream
-	 *            True guarantees, that {@link OutputStream#close()} is called
-	 *            on the stream. False indicates, that only
-	 *            {@link OutputStream#flush()} should be called finally.
-	 *
-	 * @return Number of bytes, which have been copied.
-	 * @throws IOException
-	 *             An I/O error occurred.
-	 */
-	public static long copy(InputStream inputStream, OutputStream outputStream, boolean closeOutputStream)
-			throws IOException {
-		return copy(inputStream, outputStream, closeOutputStream, new byte[DEFAULT_BUFFER_SIZE]);
-	}
-
-	/**
-	 * Copies the contents of the given {@link InputStream} to the given
-	 * {@link OutputStream}.
-	 *
-	 * @param inputStream
-	 *            The input stream, which is being read. It is guaranteed, that
-	 *            {@link InputStream#close()} is called on the stream.
-	 * @param outputStream
-	 *            The output stream, to which data should be written. May be
-	 *            null, in which case the input streams contents are simply
-	 *            discarded.
-	 * @param closeOutputStream
-	 *            True guarantees, that {@link OutputStream#close()} is called
-	 *            on the stream. False indicates, that only
-	 *            {@link OutputStream#flush()} should be called finally.
-	 * @param buffer
-	 *            Temporary buffer, which is to be used for copying data.
-	 * @return Number of bytes, which have been copied.
-	 * @throws IOException
-	 *             An I/O error occurred.
-	 */
-	public static long copy(InputStream inputStream, OutputStream outputStream, boolean closeOutputStream,
-			byte[] buffer) throws IOException {
-		OutputStream out = outputStream;
-		InputStream in = inputStream;
+	public static long copy(InputStream in, OutputStream out, boolean closeOut) throws IOException {
+		final byte[] temp = BYTE_BUFFER.clone();
 		try {
 			long total = 0;
-			for (;;) {
-				int res = in.read(buffer);
-				if (res == -1) {
-					break;
-				}
-				if (res > 0) {
-					total += res;
-					if (out != null) {
-						out.write(buffer, 0, res);
-					}
+			int res;
+			while ((res = in.read(temp)) > 0) {
+				total += res;
+				if (out != null) {
+					out.write(temp, 0, res);
 				}
 			}
-			if (out != null) {
-				if (closeOutputStream) {
-					out.close();
-				} else {
-					out.flush();
-				}
-				out = null;
-			}
-			in.close();
-			in = null;
 			return total;
 		} finally {
 			close(in);
-			if (closeOutputStream) {
+			if (closeOut) {
 				close(out);
+			} else {
+				if (out != null) {
+					out.flush();
+					out = null;
+				}
 			}
 		}
 	}
 
 	public static String asString(InputStream inputStream) throws IOException {
-		final char[] temp = new char[DEFAULT_BUFFER_SIZE];
+		final char[] temp = CHAR_BUFFER.clone();
 		InputStreamReader reader = new InputStreamReader(inputStream, "utf-8");
 		int len;
 		StringBuilder sb = new StringBuilder();
@@ -132,6 +72,17 @@ public final class Streams {
 		// 释放资源
 		inputStream.close();
 		return sb.toString();
+	}
+
+	public static String asString(String resource) {
+		try {
+			InputStream input = Streams.class.getClassLoader().getResourceAsStream(resource);
+			if (input != null)
+				return asString(input);
+		} catch (IOException e) {
+			logger.error("Load resource '{}' faild", resource, e);
+		}
+		return null;
 	}
 
 	public static String parseValue(String str, String name) {
@@ -159,10 +110,25 @@ public final class Streams {
 		if (closeable != null) {
 			try {
 				closeable.close();
+				closeable = null;
 			} catch (IOException e) {
 				// Nothing
 			}
 		}
+	}
+
+	public static Properties loadProperties(String resource) {
+		Properties p = new Properties();
+		try {
+			InputStream input = Streams.class.getClassLoader().getResourceAsStream(resource);
+			if (input != null) {
+				p.load(input);
+				input.close();
+			}
+		} catch (IOException e) {
+			logger.error("Load struts.properties faild", e);
+		}
+		return p;
 	}
 
 }

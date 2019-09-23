@@ -2,7 +2,7 @@
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/cn.4coder/struts/badge.svg)](https://maven-badges.herokuapp.com/maven-central/cn.4coder/struts/)
 [![GitHub release](https://img.shields.io/github/release/yydf/struts.svg)](https://github.com/yydf/struts/releases)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://raw.githubusercontent.com/yydf/struts/master/LICENSE)
-![Jar Size](https://img.shields.io/badge/jar--size-63.2k-blue.svg)
+![Jar Size](https://img.shields.io/badge/jar--size-71.2k-blue.svg)
 
 特性
 -------------------------
@@ -25,7 +25,7 @@
 <dependency>
     <groupId>cn.4coder</groupId>
     <artifactId>struts</artifactId>
-    <version>0.0.7</version>
+    <version>0.0.8</version>
 </dependency>
 ```
 

@@ -35,6 +35,7 @@ public abstract class ActionSupport implements processFile {
 		}
 	}
 
+	@Override
 	public abstract String processMultipartFile(MultipartFile file);
 
 	protected HttpSession getSession() {

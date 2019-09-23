@@ -18,6 +18,7 @@ import cn.coder.struts.core.Action;
 import cn.coder.struts.core.ActionHandler;
 import cn.coder.struts.core.StrutsContextResolver;
 import cn.coder.struts.core.ViewHandler;
+import cn.coder.struts.wrapper.SwaggerWrapper;
 
 /**
  * 核心分发请求类 负责处理所有请求，返回相应的结果
@@ -32,6 +33,7 @@ public final class StrutsFilter implements Filter {
 	private ActionHandler actionHandler;
 	private StrutsContextResolver resolver;
 	private ViewHandler viewHandler;
+	private SwaggerWrapper swaggerWrapper;
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
@@ -41,6 +43,7 @@ public final class StrutsFilter implements Filter {
 		this.encoding = resolver.getEncoding();
 		this.actionHandler = resolver.getHandler();
 		this.viewHandler = resolver.getViewHandler();
+		this.swaggerWrapper = resolver.getSwaggerWrapper();
 		if (logger.isDebugEnabled()) {
 			long start = (long) filterConfig.getServletContext().getAttribute("__start");
 			logger.debug("Struts framework started with {}ms", (System.currentTimeMillis() - start));
@@ -49,6 +52,9 @@ public final class StrutsFilter implements Filter {
 			sb.append("\nstruts.encoding                  ").append(this.encoding);
 			sb.append("\nstruts.loaders                   ").append(resolver.getLoaderNum());
 			sb.append("\nstruts.actions                   ").append(this.actionHandler.getActionNum());
+			if (this.swaggerWrapper != null) {
+				sb.append("\nstruts.swagger                   ").append(this.swaggerWrapper.getRequestUrl());
+			}
 			sb.append("\nstruts.interceptors              ").append(resolver.getInterceptorNum());
 			logger.debug(sb.toString());
 		}
@@ -64,6 +70,11 @@ public final class StrutsFilter implements Filter {
 		res.setCharacterEncoding(this.encoding);
 
 		String path = req.getServletPath();
+		if (this.swaggerWrapper != null && this.swaggerWrapper.isSwaggerPath(path)) {
+			res.addHeader("Access-Control-Allow-Origin", "*");
+			this.viewHandler.handle(this.swaggerWrapper.jsonResult(), req, res);
+			return;
+		}
 		Action action = this.actionHandler.getAction(path);
 		if (action != null) {
 			Object result = this.actionHandler.handle(action, req, res);

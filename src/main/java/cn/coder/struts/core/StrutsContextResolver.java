@@ -1,7 +1,5 @@
 package cn.coder.struts.core;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -9,23 +7,22 @@ import java.util.Properties;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import cn.coder.struts.aop.Aop;
 import cn.coder.struts.aop.AopFactory;
 import cn.coder.struts.support.StrutsLoader;
+import cn.coder.struts.util.Streams;
+import cn.coder.struts.wrapper.SwaggerWrapper;
 
 public final class StrutsContextResolver {
-	private static final Logger logger = LoggerFactory.getLogger(StrutsContextResolver.class);
-
 	private String encoding = "utf-8";
 	private StrutsContext context;
 	private ServletContext servletContext;
 	private List<StrutsLoader> loaders;
 	private Class<?>[] interceptors;
+	private FilterRegistration registration;
 	private ActionHandler handler;
 	private ViewHandler viewHandler;
+	private SwaggerWrapper swaggerWrapper;
 
 	public StrutsContextResolver(ServletContext ctx) {
 		this.servletContext = ctx;
@@ -38,20 +35,12 @@ public final class StrutsContextResolver {
 		initLoader();
 		initInterceptor();
 		initHandler();
+		initSwagger();
 	}
 
 	private void initConfig() {
-		try {
-			InputStream input = StrutsContextResolver.class.getClassLoader().getResourceAsStream("struts.properties");
-			if (input != null) {
-				Properties p = new Properties();
-				p.load(input);
-				input.close();
-				this.encoding = p.getProperty("encoding", "utf-8");
-			}
-		} catch (IOException e) {
-			logger.error("Load struts.properties faild", e);
-		}
+		Properties p = Streams.loadProperties("struts.properties");
+		this.encoding = p.getProperty("encoding", "utf-8");
 	}
 
 	private void initAop() {
@@ -73,12 +62,21 @@ public final class StrutsContextResolver {
 	}
 
 	private void initHandler() {
-		FilterRegistration registration = servletContext.getFilterRegistration("StrutsFilter");
+		this.registration = servletContext.getFilterRegistration("StrutsFilter");
 		Class<?>[] controllers = context.getControllers();
 		this.handler = new ActionHandler();
 		this.handler.init(controllers, this.interceptors, registration);
 
 		this.viewHandler = new ViewHandler(this.encoding);
+	}
+
+	private void initSwagger() {
+		Class<?> swaggerClazz = context.getSwagger();
+		if (swaggerClazz != null) {
+			String templete = Streams.asString("swagger.tpl");
+			this.swaggerWrapper = new SwaggerWrapper(swaggerClazz, templete, this.handler);
+			this.handler.bindSwagger(registration, swaggerWrapper.getRequestUrl());
+		}
 	}
 
 	public synchronized void start() {
@@ -109,11 +107,20 @@ public final class StrutsContextResolver {
 		return this.viewHandler;
 	}
 
+	public SwaggerWrapper getSwaggerWrapper() {
+		return this.swaggerWrapper;
+	}
+
 	public synchronized void destroy() {
 		this.encoding = null;
 		this.servletContext = null;
 		this.interceptors = null;
+		this.registration = null;
 		this.handler.clear();
+		if (this.swaggerWrapper != null) {
+			this.swaggerWrapper.clear();
+			this.swaggerWrapper = null;
+		}
 		this.viewHandler = null;
 		if (this.loaders != null) {
 			for (StrutsLoader loader : loaders) {
