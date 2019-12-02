@@ -14,11 +14,13 @@ public final class Invocation {
 	private final HttpServletRequest request;
 	private final HttpServletResponse response;
 	private final Class<?>[] interceptors;
+	private boolean complete;
 
 	public Invocation(HttpServletRequest req, HttpServletResponse res, Action action) {
 		this.request = req;
 		this.response = res;
 		this.action = action;
+		this.complete = false;
 		this.interceptors = action.getInterceptors();
 		this.size = (this.interceptors == null ? 0 : this.interceptors.length);
 		next();
@@ -27,6 +29,8 @@ public final class Invocation {
 	public void next() {
 		if (this.cur < size) {
 			((Interceptor) Aop.create(interceptors[this.cur++])).intercept(this);
+		} else if (this.cur == size) {
+			this.complete = true;
 		}
 	}
 
@@ -43,7 +47,7 @@ public final class Invocation {
 	}
 
 	public boolean complete() {
-		return this.cur == size;
+		return this.complete;
 	}
 
 	public Class<?> current() {
