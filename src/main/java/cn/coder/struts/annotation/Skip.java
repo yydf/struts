@@ -8,10 +8,10 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-@Documented
 @Retention(RUNTIME)
 @Inherited
 @Target({ ElementType.TYPE, ElementType.METHOD })
+@Documented
 public @interface Skip {
 
 }

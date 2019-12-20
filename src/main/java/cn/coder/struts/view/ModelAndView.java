@@ -1,83 +1,48 @@
 package cn.coder.struts.view;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
+import cn.coder.struts.support.ServletWebRequest;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import cn.coder.struts.util.BeanUtils;
-
-public final class ModelAndView {
-	private static final Logger logger = LoggerFactory.getLogger(ModelAndView.class);
+public class ModelAndView implements View {
 
 	private String viewName;
-	private final HashMap<String, Object> temp;
+	private Map<String, Object> data = new HashMap<>();
 
-	public ModelAndView() {
-		this(null);
-	}
-
-	public ModelAndView(String view) {
-		if (view != null)
-			this.viewName = view;
-		temp = new HashMap<>(32);
-	}
-
-	public static ModelAndView view(String view) {
-		return new ModelAndView(view);
+	public ModelAndView(String name) {
+		this.viewName = name;
 	}
 
 	public String getViewName() {
+		if (!this.viewName.startsWith("/"))
+			this.viewName = "/" + this.viewName;
 		return this.viewName;
 	}
 
-	public ModelAndView setViewName(String view) {
-		this.viewName = view;
+	public ModelAndView addObject(String name, Object obj) {
+		this.data.put(name, obj);
 		return this;
 	}
 
-	public ModelAndView addObject(Object obj) {
-		if (obj == null)
-			return this;
-		Set<Field> fields = BeanUtils.getDeclaredFields(obj.getClass());
-		if (!fields.isEmpty()) {
-			for (Field field : fields) {
-				if ("serialVersionUID".equals(field.getName()))
-					continue;
-				try {
-					if (!field.isAccessible())
-						field.setAccessible(true);
-					addObject(field.getName(), field.get(obj));
-				} catch (Exception e) {
-					if (logger.isErrorEnabled())
-						logger.error("Add object faild", e);
-				}
-			}
+	public Map<String, Object> getData() {
+		return this.data;
+	}
+
+	@Override
+	public boolean supports(Object result) {
+		return (result instanceof ModelAndView);
+	}
+
+	@Override
+	public void render(ServletWebRequest req, Object result) throws Exception {
+		ModelAndView mav = (ModelAndView) result;
+		Map<String, Object> data = mav.getData();
+		for (Entry<String, Object> entry : data.entrySet()) {
+			req.getRequest().setAttribute(entry.getKey(), entry.getValue());
 		}
-		return this;
-	}
-
-	public ModelAndView addObject(String attr, Object obj) {
-		this.temp.put(attr, obj);
-		if (logger.isDebugEnabled())
-			logger.debug("Add object [{}]{}", attr, obj);
-		return this;
-	}
-
-	public void fillRequest(HttpServletRequest req) {
-		if (!temp.isEmpty()) {
-			Set<Entry<String, Object>> entries = temp.entrySet();
-			for (Entry<String, Object> entry : entries) {
-				req.setAttribute(entry.getKey(), entry.getValue());
-			}
-			if (logger.isDebugEnabled())
-				logger.debug("Fill request:{}", entries.size());
-		}
+		req.forward(mav.getViewName());
 	}
 
 }

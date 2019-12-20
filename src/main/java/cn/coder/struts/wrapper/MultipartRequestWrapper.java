@@ -11,8 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.coder.struts.support.MultipartFile;
 import cn.coder.struts.util.Streams;
-import cn.coder.struts.view.MultipartFile;
 
 public final class MultipartRequestWrapper {
 	private static final Logger logger = LoggerFactory.getLogger(MultipartRequestWrapper.class);
@@ -22,6 +22,10 @@ public final class MultipartRequestWrapper {
 
 	private final HashMap<String, String> paras = new HashMap<>();
 	private final HashMap<String, MultipartFile> multipartFiles = new HashMap<>();
+
+	public MultipartRequestWrapper(HttpServletRequest req) {
+		this(req, null);
+	}
 
 	public MultipartRequestWrapper(HttpServletRequest req, processFile process) {
 		wrapperRequest(req, process);

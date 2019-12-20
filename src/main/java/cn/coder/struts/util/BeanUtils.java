@@ -1,65 +1,40 @@
 package cn.coder.struts.util;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-public final class BeanUtils {
-	private static final ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat>() {
-		@Override
-		protected SimpleDateFormat initialValue() {
-			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		}
-	};
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	public static void setValue(Field field, Object obj, Object value) {
-		if (Modifier.isFinal(field.getModifiers()))
-			return;
+import cn.coder.struts.annotation.Request;
+
+public class BeanUtils {
+	private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
+
+	public static Class<?> toClass(String clazz, boolean replace) {
 		try {
-			if (!field.isAccessible())
-				field.setAccessible(true);
-			field.set(obj, toValue(field.getType(), value));
-		} catch (Exception e) {
-			throw new RuntimeException("Set value faild", e);
+			if (replace) {
+				clazz = clazz.replace("/WEB-INF/classes/", "");
+				clazz = clazz.replace('/', '.');
+				clazz = clazz.replace(".class", "");
+			}
+			return Class.forName(clazz);
+		} catch (ClassNotFoundException e) {
+			if (logger.isWarnEnabled())
+				logger.warn("'{}' not a class", clazz);
 		}
+		return null;
 	}
 
-	public static Object toValue(Class<?> type, Object value) {
-		if (value == null)
-			return null;
-		if (value.getClass().equals(type))
-			return value;
-		switch (type.getName()) {
-		case "java.lang.String":
-			if (value instanceof Date)
-				return sdf.get().format(value);
-			return value.toString();
-		case "int":
-		case "java.lang.Integer":
-			return ("".equals(value) ? null : Integer.parseInt(value.toString()));
-		case "long":
-		case "java.lang.Long":
-			if (value instanceof Date)
-				return ((Date) value).getTime();
-			return ("".equals(value) ? null : Long.parseLong(value.toString()));
-		case "boolean":
-		case "java.lang.Boolean":
-			return ("".equals(value) ? null : Boolean.parseBoolean(value.toString()));
-		case "double":
-		case "java.lang.Double":
-			return ("".equals(value) ? null : Double.parseDouble(value.toString()));
-		case "float":
-		case "java.lang.Float":
-			return ("".equals(value) ? null : Float.parseFloat(value.toString()));
-		case "java.util.Date":
-			return DateEx.toDate(value);
-		default:
-			throw new RuntimeException("Unkonwn field type " + type.getName());
-		}
+	public static String genericPath(Request req, Request req2) {
+		String path = req2.value().startsWith("/") ? req2.value() : "/" + req2.value();
+		if (path.startsWith("~"))
+			return path.substring(1);
+		if (req == null)
+			return path;
+		String base = req.value().startsWith("/") ? req.value() : "/" + req.value();
+		return base + path;
 	}
 
 	public static Set<Field> getDeclaredFields(Class<?> clazz) {
@@ -78,17 +53,16 @@ public final class BeanUtils {
 		}
 	}
 
-	public static Class<?> toClass(String className) {
-		try {
-			return Class.forName(className);
-		} catch (ClassNotFoundException e) {
+	public static Object valueToType(Class<?> type, Object value) {
+		if (value == null)
 			return null;
+		if (value.getClass().equals(type))
+			return value;
+		switch (type.getName()) {
+		case "java.lang.String":
+			return value;
 		}
-	}
-
-	public static Class<?>[] toArray(List<Class<?>> classes) {
-		Class<?>[] array = new Class<?>[classes.size()];
-		return classes.toArray(array);
+		return value;
 	}
 
 }

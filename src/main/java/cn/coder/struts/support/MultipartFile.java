@@ -1,4 +1,4 @@
-package cn.coder.struts.view;
+package cn.coder.struts.support;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,9 +13,8 @@ import cn.coder.struts.util.Streams;
 import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
 
-public final class MultipartFile {
+public class MultipartFile {
 	private static final Logger logger = LoggerFactory.getLogger(MultipartFile.class);
-
 	private static final String CONTENT_TYPE = "Content-Type";
 	private static final String CONTENT_DISPOSITION = MultipartRequestWrapper.CONTENT_DISPOSITION;
 
@@ -26,11 +25,11 @@ public final class MultipartFile {
 	private String contentType;
 	private String extension;
 
-	public MultipartFile(Map<String, String> headers, InputStream input) throws IOException {
+	public MultipartFile(Map<String, String> headers, InputStream inputStream) throws IOException {
 		this.fileName = getFileName(headers);
 		this.fieldName = getFieldName(headers);
-		this.inputStream = input;
-		this.size = (long) input.available();
+		this.inputStream = inputStream;
+		this.size = (long) inputStream.available();
 		this.contentType = headers.get(CONTENT_TYPE);
 		if (!StringUtils.isEmpty(fileName)) {
 			int last = fileName.lastIndexOf(".");
@@ -48,9 +47,9 @@ public final class MultipartFile {
 	private static String getFieldName(Map<String, String> headers) {
 		return Streams.parseValue(headers.get(CONTENT_DISPOSITION), "name");
 	}
-
+	
 	public long getSize() {
-		return size;
+		return this.size;
 	}
 
 	public String getContentType() {
@@ -101,4 +100,6 @@ public final class MultipartFile {
 		this.fieldName = null;
 		this.contentType = null;
 	}
+
+
 }

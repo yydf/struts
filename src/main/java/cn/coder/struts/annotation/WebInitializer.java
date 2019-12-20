@@ -8,14 +8,13 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import cn.coder.struts.support.ActionSupport;
-
-@Documented
 @Retention(RUNTIME)
 @Inherited
 @Target(ElementType.TYPE)
-public @interface With {
+@Documented
+public @interface WebInitializer {
 
-	Class<? extends ActionSupport>[] value();
-
+	String init() default "init";
+	
+	String destroy() default "destroy";
 }
