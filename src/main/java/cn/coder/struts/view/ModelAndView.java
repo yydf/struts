@@ -9,10 +9,15 @@ import cn.coder.struts.support.ServletWebRequest;
 public class ModelAndView implements View {
 
 	private String viewName;
-	private Map<String, Object> data = new HashMap<>();
+	private Map<String, Object> data;
+
+	public ModelAndView() {
+		this(null);
+	}
 
 	public ModelAndView(String name) {
 		this.viewName = name;
+		this.data = new HashMap<>();
 	}
 
 	public String getViewName() {
@@ -40,7 +45,7 @@ public class ModelAndView implements View {
 		ModelAndView mav = (ModelAndView) result;
 		Map<String, Object> data = mav.getData();
 		for (Entry<String, Object> entry : data.entrySet()) {
-			req.getRequest().setAttribute(entry.getKey(), entry.getValue());
+			req.setRequestAttr(entry.getKey(), entry.getValue());
 		}
 		req.forward(mav.getViewName());
 	}

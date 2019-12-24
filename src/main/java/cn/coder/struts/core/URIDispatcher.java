@@ -1,6 +1,5 @@
 package cn.coder.struts.core;
 
-import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,15 +16,15 @@ import cn.coder.struts.handler.HandlerAdapter;
 import cn.coder.struts.support.ServletWebRequest;
 import cn.coder.struts.view.View;
 
-public class RequestDispatcher extends AbstractDispatcher {
-	private static final Logger logger = LoggerFactory.getLogger(RequestDispatcher.class);
+public class URIDispatcher extends AbstractDispatcher {
+	private static final Logger logger = LoggerFactory.getLogger(URIDispatcher.class);
 
 	private List<Handler> handlers;
 	private List<HandlerAdapter> handlerAdapters;
 	private List<View> views;
 	private List<Method> destroyMethods;
 
-	public RequestDispatcher(FilterConfig filterConfig) {
+	public URIDispatcher(FilterConfig filterConfig) {
 		super(filterConfig.getServletContext());
 	}
 
@@ -71,17 +70,18 @@ public class RequestDispatcher extends AbstractDispatcher {
 
 	public void doDispatch(ServletWebRequest req) throws ServletException {
 		if (logger.isDebugEnabled())
-			logger.debug(
-					"RequestDispatcher processing " + req.getMethod() + " request for [" + req.getRequestURI() + "]");
+			logger.debug("URIDispatcher processing " + req.getMethod() + " request for [" + req.getRequestURI() + "]");
 
 		try {
-			Handler handler = getHandler(req);
+			Handler handler = getHandler(req, this.handlers);
 			if (handler == null) {
 				noHandlerFound(req);
 				return;
 			}
 
 			if (!handler.preHandle(req)) {
+				if (logger.isDebugEnabled())
+					logger.debug("Dispatcher stoped by '{}' preHandle", handler);
 				return;
 			}
 
@@ -89,14 +89,17 @@ public class RequestDispatcher extends AbstractDispatcher {
 			Exception dispatchException = null;
 
 			try {
-				HandlerAdapter adapter = getHandlerAdapter(handler);
+				HandlerAdapter adapter = getHandlerAdapter(handler, this.handlerAdapters);
 				result = adapter.handle(req, handler);
 			} catch (Exception e) {
 				dispatchException = e;
 			}
 
-			// 处理返回值
-			processDispatchResult(req, result, dispatchException);
+			// 处理异常和返回值
+			if (dispatchException != null)
+				processError(req, dispatchException);
+			else
+				processView(req, result, this.views);
 
 			handler.finishHandle(req, result, dispatchException);
 		} catch (Exception e) {
@@ -106,44 +109,6 @@ public class RequestDispatcher extends AbstractDispatcher {
 				req.clear();
 			}
 		}
-	}
-
-	private void processDispatchResult(ServletWebRequest req, Object result, Exception dispatchException)
-			throws Exception {
-		if (dispatchException != null) {
-			PrintWriter pw = req.getWriter();
-			dispatchException.printStackTrace(pw);
-			pw.close();
-		} else {
-			if (result == null)
-				return;
-			View view = getView(result);
-			view.render(req, result);
-		}
-	}
-
-	private Handler getHandler(ServletWebRequest req) {
-		for (Handler handler : this.handlers) {
-			if (handler.lookup(req))
-				return handler;
-		}
-		return null;
-	}
-
-	private HandlerAdapter getHandlerAdapter(Handler handler) throws ServletException {
-		for (HandlerAdapter adapter : handlerAdapters) {
-			if (adapter.supports(handler))
-				return adapter;
-		}
-		throw new ServletException("No HandlerAdapter found for handler '" + handler + "'");
-	}
-
-	private View getView(Object result) throws ServletException {
-		for (View view : this.views) {
-			if (view.supports(result))
-				return view;
-		}
-		throw new ServletException("No View found for result '" + result.getClass().getName() + "'");
 	}
 
 	public synchronized void clear() {

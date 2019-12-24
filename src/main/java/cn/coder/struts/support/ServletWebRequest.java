@@ -88,12 +88,28 @@ public final class ServletWebRequest {
 		return this.req.getServletPath();
 	}
 
+	public void forward(String path) throws ServletException, IOException {
+		this.req.getRequestDispatcher(path).forward(this.req, this.res);
+	}
+
+	public void setRequestAttr(String name, Object value) {
+		this.req.setAttribute(name, value);
+	}
+
+	public void setSessionAttr(String name, Object value) {
+		this.session.setAttribute(name, value);
+	}
+
 	public PrintWriter getWriter() throws IOException {
 		return this.res.getWriter();
 	}
 
 	public void sendError(int sc) throws IOException {
 		this.res.sendError(sc);
+	}
+	
+	public void sendError(int sc, String msg) throws IOException {
+		this.res.sendError(sc, msg);
 	}
 
 	public void clear() {
@@ -104,10 +120,6 @@ public final class ServletWebRequest {
 		this.session = null;
 		this.req = null;
 		this.res = null;
-	}
-
-	public void forward(String path) throws ServletException, IOException {
-		this.req.getRequestDispatcher(path).forward(this.req, this.res);
 	}
 
 }

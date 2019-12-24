@@ -3,20 +3,20 @@ package cn.coder.struts.handler;
 import cn.coder.struts.core.ApplicationContext;
 import cn.coder.struts.support.ServletWebRequest;
 
-public class SimpleRequestAdapter implements HandlerAdapter {
+public class SimpleHandlerAdapter implements HandlerAdapter {
 
-	public SimpleRequestAdapter(ApplicationContext applicationContext) {
+	public SimpleHandlerAdapter(ApplicationContext applicationContext) {
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
 	public boolean supports(Handler handler) {
-		return (handler instanceof SimpleRequestHandler);
+		return (handler instanceof AbstractHandler);
 	}
 
 	@Override
 	public Object handle(ServletWebRequest req, Handler handler) throws Exception {
-		return ((SimpleRequestHandler) handler).handleRequest(req);
+		return ((AbstractHandler) handler).handleRequest(req);
 	}
 
 }

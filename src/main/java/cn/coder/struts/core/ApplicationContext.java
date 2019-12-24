@@ -1,5 +1,6 @@
 package cn.coder.struts.core;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -16,8 +17,9 @@ import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
-import cn.coder.struts.handler.SimpleRequestAdapter;
-import cn.coder.struts.handler.SimpleRequestHandler;
+import cn.coder.struts.handler.MatchableURIHandler;
+import cn.coder.struts.handler.SimpleHandlerAdapter;
+import cn.coder.struts.handler.SimpleURIHandler;
 import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.view.JSONMap;
 import cn.coder.struts.view.ModelAndView;
@@ -44,14 +46,16 @@ public class ApplicationContext {
 
 	private void scanClasses(List<Class<?>> classes, String path) {
 		Set<String> paths = this.context.getResourcePaths(path);
-		for (String temp : paths) {
-			if (temp.endsWith("/"))
-				scanClasses(classes, temp);
-			else {
-				if (temp.endsWith(".class")) {
-					Class<?> clazz = BeanUtils.toClass(temp, true);
-					if (clazz != null) {
-						classes.add(clazz);
+		if (paths != null && !paths.isEmpty()) {
+			for (String temp : paths) {
+				if (temp.endsWith("/"))
+					scanClasses(classes, temp);
+				else {
+					if (temp.endsWith(".class")) {
+						Class<?> clazz = BeanUtils.toClass(temp, true);
+						if (clazz != null) {
+							classes.add(clazz);
+						}
 					}
 				}
 			}
@@ -60,13 +64,16 @@ public class ApplicationContext {
 
 	public List<Handler> getHandlers() {
 		List<Handler> list = new ArrayList<>();
-		list.add(new SimpleRequestHandler(this));
+		list.add(new SimpleURIHandler(this));
+		list.add(new MatchableURIHandler(this));
+		addOther(list, Handler.class, true);
 		return list;
 	}
 
 	public List<HandlerAdapter> getHandlerAdapters() {
 		List<HandlerAdapter> list = new ArrayList<>();
-		list.add(new SimpleRequestAdapter(this));
+		list.add(new SimpleHandlerAdapter(this));
+		addOther(list, HandlerAdapter.class, true);
 		return list;
 	}
 
@@ -74,8 +81,30 @@ public class ApplicationContext {
 		List<View> list = new ArrayList<>();
 		list.add(new JSONMap());
 		list.add(new TextView());
-		list.add(new ModelAndView(null));
+		list.add(new ModelAndView());
+		addOther(list, View.class, false);
 		return list;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> void addOther(List<T> list, Class<T> class1, boolean initWithContext) {
+		if (this.classes.length > 0) {
+			for (Class<?> clazz : this.classes) {
+				if (class1.isAssignableFrom(clazz)) {
+					try {
+						Object obj;
+						if (initWithContext) {
+							Constructor<?> constructor = clazz.getConstructor(ApplicationContext.class);
+							obj = constructor.newInstance(this);
+						} else
+							obj = clazz.newInstance();
+						list.add((T) obj);
+					} catch (Exception e) {
+						logger.warn("Add object instanceof '" + class1 + "' faild", e);
+					}
+				}
+			}
+		}
 	}
 
 	public Class<?>[] getClasses() {

@@ -1,6 +1,5 @@
 package cn.coder.struts.handler;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,23 +14,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.annotation.Param;
-import cn.coder.struts.annotation.Request;
-import cn.coder.struts.annotation.Skip;
 import cn.coder.struts.core.ApplicationContext;
 import cn.coder.struts.support.Controller;
 import cn.coder.struts.support.HandlerInterceptor;
 import cn.coder.struts.support.ServletWebRequest;
-import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.wrapper.OrderWrapper;
 
-public class SimpleRequestHandler implements Handler {
-	private static final Logger logger = LoggerFactory.getLogger(SimpleRequestHandler.class);
+public abstract class AbstractHandler implements Handler {
+	private static final Logger logger = LoggerFactory.getLogger(AbstractHandler.class);
 
-	private final ApplicationContext context;
-	private final Map<String, HandlerMethod> handlerMethods;
-	private HandlerInterceptor[] interceptors;
+	protected final ApplicationContext context;
+	protected final Map<String, HandlerMethod> handlerMethods;
+	protected HandlerInterceptor[] interceptors;
 
-	public SimpleRequestHandler(ApplicationContext context) {
+	public AbstractHandler(ApplicationContext context) {
 		this.context = context;
 		this.handlerMethods = new HashMap<>();
 		detectHandlers(context.getClasses());
@@ -61,6 +57,24 @@ public class SimpleRequestHandler implements Handler {
 		return true;
 	}
 
+	public Object handleRequest(ServletWebRequest req) throws Exception {
+		Controller ctrl = null;
+		try {
+			HandlerMethod hm = getHandlerMethod(req);
+			ctrl = (Controller) this.context.getSingleton(hm.getController());
+			if (hm.hasMatchedValues()) {
+				hm.fillRequest(req);
+				ctrl.init(req);
+			}
+			Object[] args = buildArgs(hm.getParameters(), ctrl, req);
+			return hm.invoke(ctrl, args);
+		} finally {
+			if (ctrl != null) {
+				ctrl.clear();
+			}
+		}
+	}
+
 	@Override
 	public void finishHandle(ServletWebRequest req, Object result, Exception e) {
 		HandlerMethod hm = getHandlerMethod(req);
@@ -76,26 +90,7 @@ public class SimpleRequestHandler implements Handler {
 		}
 	}
 
-	public Object handleRequest(ServletWebRequest req) throws Exception {
-		Controller ctrl = null;
-		try {
-			HandlerMethod hm = getHandlerMethod(req);
-			ctrl = (Controller) this.context.getSingleton(hm.getController());
-			ctrl.init(req);
-			Object[] args = buildArgs(hm.getParameters(), ctrl, req);
-			return hm.invoke(ctrl, args);
-		} finally {
-			if (ctrl != null) {
-				ctrl.clear();
-			}
-		}
-	}
-
-	private HandlerMethod getHandlerMethod(ServletWebRequest req) {
-		return this.handlerMethods.get(req.getServletPath());
-	}
-
-	private static Object[] buildArgs(Parameter[] parameters, Controller ctrl, ServletWebRequest req) {
+	protected static Object[] buildArgs(Parameter[] parameters, Controller ctrl, ServletWebRequest req) {
 		Object[] args = new Object[parameters.length];
 		if (parameters.length > 0) {
 			Param p;
@@ -125,6 +120,10 @@ public class SimpleRequestHandler implements Handler {
 		}
 	}
 
+	protected abstract HandlerMethod getHandlerMethod(ServletWebRequest req);
+
+	protected abstract void registerHandler(Class<?> clazz);
+
 	private void detectInterceptor(Class<?>[] classes) {
 		List<HandlerInterceptor> temp = new ArrayList<>();
 		for (Class<?> clazz : classes) {
@@ -135,22 +134,6 @@ public class SimpleRequestHandler implements Handler {
 		OrderWrapper.sort(temp);
 		this.interceptors = new HandlerInterceptor[temp.size()];
 		temp.toArray(this.interceptors);
-	}
-
-	private void registerHandler(Class<?> temp) {
-		Method[] methods = temp.getDeclaredMethods();
-		Request r1 = temp.getAnnotation(Request.class);
-		String path;
-		HandlerMethod hm;
-		for (Method method : methods) {
-			Request r2 = method.getAnnotation(Request.class);
-			if (r2 != null) {
-				path = BeanUtils.genericPath(r1, r2);
-				hm = new HandlerMethod(method);
-				hm.setSkip(temp.getAnnotation(Skip.class) != null || method.getAnnotation(Skip.class) != null);
-				this.handlerMethods.put(path, hm);
-			}
-		}
 	}
 
 	private void registerInterceptor(List<HandlerInterceptor> temp, Class<?> clazz) {

@@ -9,17 +9,17 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import cn.coder.struts.core.RequestDispatcher;
+import cn.coder.struts.core.URIDispatcher;
 import cn.coder.struts.support.ServletWebRequest;
 
 public class StrutsFilter implements Filter {
 	
 	private static final String DEFAULT_ENCODING = "UTF-8";
-	private RequestDispatcher dispatcher;
+	private URIDispatcher dispatcher;
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
-		dispatcher = new RequestDispatcher(filterConfig);
+		dispatcher = new URIDispatcher(filterConfig);
 		dispatcher.init();
 	}
 

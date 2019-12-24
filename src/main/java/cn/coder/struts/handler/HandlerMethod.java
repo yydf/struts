@@ -2,8 +2,12 @@ package cn.coder.struts.handler;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
 
 import cn.coder.struts.support.Controller;
+import cn.coder.struts.support.ServletWebRequest;
 
 public final class HandlerMethod {
 
@@ -11,11 +15,14 @@ public final class HandlerMethod {
 	private final Class<?> controller;
 	private final Parameter[] parameters;
 	private boolean skip;
+	private List<String> matched;
+	private HashMap<String, String> paraValues;
 
 	public HandlerMethod(Method method) {
 		this.method = method;
 		this.parameters = method.getParameters();
 		this.controller = method.getDeclaringClass();
+		this.paraValues = new HashMap<>();
 	}
 
 	public String getController() {
@@ -36,6 +43,29 @@ public final class HandlerMethod {
 
 	public boolean getSkip() {
 		return this.skip;
+	}
+
+	public void matchValues(Matcher match) {
+		paraValues.clear();
+		int num = 1;
+		for (String para : this.matched) {
+			paraValues.put(para, match.group(num));
+			num++;
+		}
+	}
+
+	public void setMatch(List<String> paras) {
+		this.matched = paras;
+	}
+
+	public boolean hasMatchedValues() {
+		return this.paraValues.size() > 0;
+	}
+
+	public void fillRequest(ServletWebRequest req) {
+		for (String para : this.matched) {
+			req.setRequestAttr(para, this.paraValues.get(para));
+		}
 	}
 
 }
