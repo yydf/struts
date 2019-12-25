@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.view.JSONMap;
+import cn.coder.struts.view.ModelAndView;
 
 public abstract class Controller {
 
@@ -41,7 +42,11 @@ public abstract class Controller {
 		return null;
 	}
 	
-	protected JSONMap getOK(Object... obj) {
+	protected static ModelAndView getView(String name) {
+		return new ModelAndView(name);
+	}
+	
+	protected static JSONMap getOK(Object... obj) {
 		JSONMap jsonMap = JSONMap.success();
 		String key = "";
 		for (int i = 0; i < obj.length; i++) {
@@ -54,11 +59,11 @@ public abstract class Controller {
 		return jsonMap;
 	}
 	
-	protected JSONMap getOK(Map<String, Object> map) {
+	protected static JSONMap getOK(Map<String, Object> map) {
 		return JSONMap.success().putAll(map);
 	}
 
-	protected JSONMap getError(int errId, String msg) {
+	protected static JSONMap getError(int errId, String msg) {
 		return JSONMap.error(errId, msg);
 	}
 

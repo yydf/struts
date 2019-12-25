@@ -31,6 +31,10 @@ public class ModelAndView implements View {
 		return this;
 	}
 
+	public void setViewName(String view) {
+		this.viewName = view;
+	}
+
 	public Map<String, Object> getData() {
 		return this.data;
 	}

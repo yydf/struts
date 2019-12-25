@@ -63,9 +63,10 @@ public abstract class AbstractHandler implements Handler {
 			HandlerMethod hm = getHandlerMethod(req);
 			ctrl = (Controller) this.context.getSingleton(hm.getController());
 			if (hm.hasMatchedValues()) {
+				logger.debug("Set matched values to request attribute");
 				hm.fillRequest(req);
-				ctrl.init(req);
 			}
+			ctrl.init(req);
 			Object[] args = buildArgs(hm.getParameters(), ctrl, req);
 			return hm.invoke(ctrl, args);
 		} finally {
