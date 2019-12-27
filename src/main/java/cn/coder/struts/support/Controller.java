@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.util.StringUtils;
-import cn.coder.struts.view.JSONMap;
 import cn.coder.struts.view.ModelAndView;
 
 public abstract class Controller {
@@ -34,12 +33,24 @@ public abstract class Controller {
 		return getParameter(String.class, name);
 	}
 
+	protected void setSessionAttr(String name, Object value) {
+		LOCAL_DATA.get().setSessionAttr(name, value);
+	}
+	
+	protected void removeSessionAttr(String name) {
+		LOCAL_DATA.get().removeSessionAttr(name);
+	}
+
 	@SuppressWarnings("unchecked")
 	public <T> T getParameter(Class<T> clazz, String name) {
 		String str = LOCAL_DATA.get().getParameter(name);
 		if (str != null)
 			return (T) BeanUtils.valueToType(clazz, StringUtils.filterJSNull(str));
 		return null;
+	}
+	
+	protected String getRemoteAddr() {
+		return LOCAL_DATA.get().getRemoteAddr();
 	}
 	
 	protected static ModelAndView getView(String name) {

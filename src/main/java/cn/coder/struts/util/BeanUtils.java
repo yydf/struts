@@ -2,7 +2,6 @@ package cn.coder.struts.util;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,13 +36,13 @@ public class BeanUtils {
 		return base + path;
 	}
 
-	public static Set<Field> getDeclaredFields(Class<?> clazz) {
-		Set<Field> fieldList = new HashSet<>();
+	public static HashSet<Field> getDeclaredFields(Class<?> clazz) {
+		HashSet<Field> fieldList = new HashSet<>();
 		getDeclaredFields(clazz, fieldList);
 		return fieldList;
 	}
 
-	private static void getDeclaredFields(Class<?> clazz, Set<Field> fieldList) {
+	private static void getDeclaredFields(Class<?> clazz, HashSet<Field> fieldList) {
 		if (clazz != null) {
 			Field[] fields = clazz.getDeclaredFields();
 			for (Field field : fields) {
@@ -53,16 +52,25 @@ public class BeanUtils {
 		}
 	}
 
-	public static Object valueToType(Class<?> type, Object value) {
-		if (value == null)
-			return null;
+	//private static final List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "byte", "char", "short", "int", "long",
+	//		"float", "double");
+
+	public static Object valueToType(Class<?> type, String value) {
+		// 判断空或null，直接返回
+		if (value == null || value.length() == 0)
+			return value;
 		if (value.getClass().equals(type))
 			return value;
 		switch (type.getName()) {
-		case "java.lang.String":
+		case "int":
+		case "java.lang.Integer":
+			return Integer.parseInt(value);
+		case "long":
+		case "java.lang.Long":
+			return Long.parseLong(value);
+		default:
 			return value;
 		}
-		return value;
 	}
 
 }

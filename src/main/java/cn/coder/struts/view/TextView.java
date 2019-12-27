@@ -1,10 +1,8 @@
 package cn.coder.struts.view;
 
-import java.io.PrintWriter;
-
 import cn.coder.struts.support.ServletWebRequest;
 
-public final class TextView implements View {
+public final class TextView extends AbstractView {
 
 	private static final String CONTENT_TYPE_TEXT = "text/plain";
 
@@ -14,11 +12,10 @@ public final class TextView implements View {
 	}
 
 	@Override
-	public void render(ServletWebRequest req, Object result) throws Exception {
+	public void render(ServletWebRequest req, Object str) throws Exception {
 		req.setContentType(CONTENT_TYPE_TEXT);
-		PrintWriter pw = req.getWriter();
-		pw.write(result.toString());
-		pw.close();
+		// 输出文本
+		renderText(str.toString(), req.supportGzip(), req.getResponse());
 	}
 
 }

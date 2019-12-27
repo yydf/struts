@@ -2,6 +2,7 @@ package cn.coder.struts.core;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.servlet.FilterConfig;
@@ -69,8 +70,14 @@ public class URIDispatcher extends AbstractDispatcher {
 	}
 
 	public void doDispatch(ServletWebRequest req) throws ServletException {
-		if (logger.isDebugEnabled())
+		if (logger.isDebugEnabled()) {
 			logger.debug("URIDispatcher processing " + req.getMethod() + " request for [" + req.getRequestURI() + "]");
+			Enumeration<?> attrNames = req.getParameterNames();
+			while (attrNames.hasMoreElements()) {
+				String attrName = (String) attrNames.nextElement();
+				logger.debug("Parameter:[{}] {}", attrName, req.getParameter(attrName));
+			}
+		}
 
 		try {
 			Handler handler = getHandler(req, this.handlers);

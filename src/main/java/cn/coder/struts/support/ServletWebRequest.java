@@ -2,6 +2,7 @@ package cn.coder.struts.support;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Enumeration;
 import java.util.Iterator;
 
 import javax.servlet.ServletException;
@@ -48,6 +49,10 @@ public final class ServletWebRequest {
 	public HttpServletResponse getResponse() {
 		return this.res;
 	}
+	
+	public Enumeration<String> getParameterNames() {
+		return this.req.getParameterNames();
+	}
 
 	public String getParameter(String name) {
 		// Attribute优先级高
@@ -80,12 +85,20 @@ public final class ServletWebRequest {
 		return this.req.getRequestURI();
 	}
 
+	public String getFullRequestURL() {
+		return this.req.getRequestURL().append(this.req.getQueryString()).toString();
+	}
+
 	public void setContentType(String type) {
 		this.res.setContentType(type);
 	}
 
 	public String getServletPath() {
 		return this.req.getServletPath();
+	}
+
+	public String getRemoteAddr() {
+		return this.req.getRemoteAddr();
 	}
 
 	public void forward(String path) throws ServletException, IOException {
@@ -98,6 +111,10 @@ public final class ServletWebRequest {
 
 	public void setSessionAttr(String name, Object value) {
 		this.session.setAttribute(name, value);
+	}
+
+	public void removeSessionAttr(String name) {
+		this.session.removeAttribute(name);
 	}
 
 	public PrintWriter getWriter() throws IOException {
@@ -122,4 +139,8 @@ public final class ServletWebRequest {
 		this.res = null;
 	}
 
+	public boolean supportGzip() {
+		String accept = req.getHeader("Accept-Encoding");
+		return accept != null && accept.indexOf("gzip") > -1;
+	}
 }

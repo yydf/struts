@@ -5,8 +5,8 @@ public class StringUtils {
 	private static final String STR_UNDEFINED = "undefined";
 	private static final String STR_NULL = "null";
 
-	public static boolean isEmpty(String str) {
-		return str == null || str.length() == 0;
+	public static boolean isEmpty(Object obj) {
+		return obj == null || obj.toString().length() == 0;
 	}
 
 	public static String filterJSNull(Object obj) {

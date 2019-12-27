@@ -21,7 +21,7 @@ import cn.coder.struts.handler.MatchableURIHandler;
 import cn.coder.struts.handler.SimpleHandlerAdapter;
 import cn.coder.struts.handler.SimpleURIHandler;
 import cn.coder.struts.util.BeanUtils;
-import cn.coder.struts.view.JSONMap;
+import cn.coder.struts.view.JSONView;
 import cn.coder.struts.view.ModelAndView;
 import cn.coder.struts.view.TextView;
 import cn.coder.struts.view.View;
@@ -79,7 +79,7 @@ public class ApplicationContext {
 
 	public List<View> getViews() {
 		List<View> list = new ArrayList<>();
-		list.add(new JSONMap());
+		list.add(new JSONView());
 		list.add(new TextView());
 		list.add(new ModelAndView());
 		addOther(list, View.class, false);

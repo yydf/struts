@@ -1,16 +1,13 @@
-package cn.coder.struts.view;
+package cn.coder.struts.support;
 
-import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-import cn.coder.struts.support.ServletWebRequest;
 import cn.coder.struts.wrapper.JSONWrapper;
 
-public class JSONMap implements View {
+public final class JSONMap {
 	private final Map<String, Object> data = new HashMap<>();
 	private final JSONWrapper wrapper = new JSONWrapper();
-	private static final String CONTENT_TYPE_JSON = "application/json";
 
 	public static JSONMap success() {
 		return new JSONMap().put("success", true).put("errcode", 0).put("errmsg", "ok");
@@ -35,17 +32,7 @@ public class JSONMap implements View {
 	}
 
 	@Override
-	public boolean supports(Object result) {
-		return (result instanceof JSONMap);
+	public String toString() {
+		return wrapper.write(this.data);
 	}
-
-	@Override
-	public void render(ServletWebRequest req, Object result) throws Exception {
-		String json = wrapper.write(((JSONMap) result).getData());
-		req.setContentType(CONTENT_TYPE_JSON);
-		PrintWriter pw = req.getWriter();
-		pw.write(json);
-		pw.close();
-	}
-
 }

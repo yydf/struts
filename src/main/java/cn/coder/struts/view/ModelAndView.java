@@ -6,10 +6,10 @@ import java.util.Map.Entry;
 
 import cn.coder.struts.support.ServletWebRequest;
 
-public class ModelAndView implements View {
+public class ModelAndView extends AbstractView {
 
 	private String viewName;
-	private Map<String, Object> data;
+	private final Map<String, Object> data;
 
 	public ModelAndView() {
 		this(null);
