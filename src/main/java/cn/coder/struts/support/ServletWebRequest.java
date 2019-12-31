@@ -30,10 +30,6 @@ public final class ServletWebRequest {
 		}
 	}
 
-	public boolean isMultipartRequest() {
-		return this.multipartWrapper != null;
-	}
-
 	public Object getSession(String attr) {
 		return this.session.getAttribute(attr);
 	}

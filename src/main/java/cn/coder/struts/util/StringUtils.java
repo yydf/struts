@@ -15,4 +15,28 @@ public class StringUtils {
 		return obj.toString();
 	}
 
+	/**
+	 * 字符串补充
+	 * 
+	 * @param orgin
+	 * @param str
+	 * @param len
+	 * @return
+	 */
+	public static String padLeft(Object orgin, String str, int len) {
+		if (orgin == null)
+			return null;
+		int length = orgin.toString().length();
+		int remaining = len - length;
+		if (remaining > 0) {
+			StringBuilder sb = new StringBuilder();
+			for (int i = 0; i < remaining; i++) {
+				sb.append(str);
+			}
+			sb.append(orgin);
+			return sb.toString();
+		}
+		return orgin.toString();
+	}
+
 }

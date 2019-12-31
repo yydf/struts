@@ -3,7 +3,6 @@ package cn.coder.struts.core;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
@@ -20,10 +19,10 @@ import cn.coder.struts.view.View;
 public class URIDispatcher extends AbstractDispatcher {
 	private static final Logger logger = LoggerFactory.getLogger(URIDispatcher.class);
 
-	private List<Handler> handlers;
-	private List<HandlerAdapter> handlerAdapters;
-	private List<View> views;
-	private List<Method> destroyMethods;
+	private Handler[] handlers;
+	private HandlerAdapter[] handlerAdapters;
+	private View[] views;
+	private Method[] destroyMethods;
 
 	public URIDispatcher(FilterConfig filterConfig) {
 		super(filterConfig.getServletContext());
@@ -37,35 +36,34 @@ public class URIDispatcher extends AbstractDispatcher {
 	}
 
 	private void initHandlers() {
-		this.handlers = new ArrayList<>();
-		this.handlers.addAll(this.context.getHandlers());
+		this.handlers = this.context.getHandlers();
 	}
 
 	private void initHandlerAdapters() {
-		this.handlerAdapters = new ArrayList<>();
-		this.handlerAdapters.addAll(this.context.getHandlerAdapters());
+		this.handlerAdapters = this.context.getHandlerAdapters();
 	}
 
 	private void initViews() {
-		this.views = new ArrayList<>();
-		this.views.addAll(this.context.getViews());
+		this.views = this.context.getViews();
 	}
 
 	private void runWebInitializer() {
-		this.destroyMethods = new ArrayList<>();
-		Class<?>[] classes = this.context.getClasses();
-		WebInitializer init;
-		for (Class<?> clazz : classes) {
-			init = clazz.getAnnotation(WebInitializer.class);
-			if (init != null) {
+		Class<?>[] initClasses = this.context.getClasses(WebInitializer.class);
+		if (initClasses.length > 0) {
+			WebInitializer init;
+			ArrayList<Method> list = new ArrayList<>();
+			for (Class<?> clazz : initClasses) {
 				try {
+					init = clazz.getAnnotation(WebInitializer.class);
 					Method m = clazz.getDeclaredMethod(init.init());
 					m.invoke(this.context.getSingleton(clazz.getName()));
-					this.destroyMethods.add(clazz.getDeclaredMethod(init.destroy()));
+					list.add(clazz.getDeclaredMethod(init.destroy()));
 				} catch (Exception e) {
 					logger.warn("Init for class '" + clazz + "' faild.", e);
 				}
 			}
+			Method[] temp = new Method[list.size()];
+			this.destroyMethods = list.toArray(temp);
 		}
 	}
 
@@ -112,26 +110,28 @@ public class URIDispatcher extends AbstractDispatcher {
 		} catch (Exception e) {
 			throw new ServletException(e);
 		} finally {
-			if (req.isMultipartRequest()) {
-				req.clear();
-			}
+			req.clear();
 		}
 	}
 
 	public synchronized void clear() {
-		this.handlers.clear();
 		this.handlers = null;
-		this.handlerAdapters.clear();
 		this.handlerAdapters = null;
-		for (Method method : this.destroyMethods) {
-			try {
-				method.invoke(this.context.getSingleton(method.getDeclaringClass().getName()));
-			} catch (Exception e) {
-				logger.warn("Destroy for class '" + method.getDeclaringClass() + "' faild.", e);
+		if (this.destroyMethods != null && this.destroyMethods.length > 0) {
+			Class<?> declaringClass;
+			for (Method method : this.destroyMethods) {
+				declaringClass = method.getDeclaringClass();
+				try {
+					method.invoke(this.context.getSingleton(declaringClass));
+				} catch (Exception e) {
+					logger.warn("Destroy for class '" + declaringClass + "' faild.", e);
+				}
 			}
+			this.destroyMethods = null;
 		}
-		this.destroyMethods.clear();
-		this.destroyMethods = null;
+		super.clear();
+		if (logger.isDebugEnabled()) 
+			logger.debug("URIDispatcher cleared");
 	}
 
 }

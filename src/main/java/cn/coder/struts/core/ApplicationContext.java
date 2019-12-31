@@ -1,11 +1,10 @@
 package cn.coder.struts.core;
 
-import java.lang.reflect.Constructor;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,14 +29,15 @@ public class ApplicationContext {
 	private static final Logger logger = LoggerFactory.getLogger(ApplicationContext.class);
 
 	private Class<?>[] classes;
-	private final ServletContext context;
-	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<String, Object>(64);
+	private ServletContext context;
+	private ConcurrentHashMap<String, Object> singletonObjects;
 
 	public ApplicationContext(ServletContext context) {
 		this.context = context;
+		this.singletonObjects = new ConcurrentHashMap<>(64);
 	}
 
-	public void doScan() {
+	public synchronized void doScan() {
 		List<Class<?>> temp = new ArrayList<>();
 		scanClasses(temp, "/WEB-INF/");
 		Class<?>[] arr = new Class<?>[temp.size()];
@@ -62,41 +62,43 @@ public class ApplicationContext {
 		}
 	}
 
-	public List<Handler> getHandlers() {
+	public Handler[] getHandlers() {
 		List<Handler> list = new ArrayList<>();
 		list.add(new SimpleURIHandler(this));
 		list.add(new MatchableURIHandler(this));
-		addOther(list, Handler.class, true);
-		return list;
+		addOtherSupport(list, Handler.class, true);
+		Handler[] temp = new Handler[list.size()];
+		return list.toArray(temp);
 	}
 
-	public List<HandlerAdapter> getHandlerAdapters() {
+	public HandlerAdapter[] getHandlerAdapters() {
 		List<HandlerAdapter> list = new ArrayList<>();
 		list.add(new SimpleHandlerAdapter(this));
-		addOther(list, HandlerAdapter.class, true);
-		return list;
+		addOtherSupport(list, HandlerAdapter.class, true);
+		HandlerAdapter[] temp = new HandlerAdapter[list.size()];
+		return list.toArray(temp);
 	}
 
-	public List<View> getViews() {
+	public View[] getViews() {
 		List<View> list = new ArrayList<>();
 		list.add(new JSONView());
 		list.add(new TextView());
 		list.add(new ModelAndView());
-		addOther(list, View.class, false);
-		return list;
+		addOtherSupport(list, View.class, false);
+		View[] temp = new View[list.size()];
+		return list.toArray(temp);
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> void addOther(List<T> list, Class<T> class1, boolean initWithContext) {
+	private <T> void addOtherSupport(List<T> list, Class<T> class1, boolean initWithContext) {
 		if (this.classes.length > 0) {
 			for (Class<?> clazz : this.classes) {
 				if (class1.isAssignableFrom(clazz)) {
 					try {
 						Object obj;
-						if (initWithContext) {
-							Constructor<?> constructor = clazz.getConstructor(ApplicationContext.class);
-							obj = constructor.newInstance(this);
-						} else
+						if (initWithContext)
+							obj = clazz.getConstructor(ApplicationContext.class).newInstance(this);
+						else
 							obj = clazz.newInstance();
 						list.add((T) obj);
 					} catch (Exception e) {
@@ -111,6 +113,27 @@ public class ApplicationContext {
 		return this.classes;
 	}
 
+	public Class<?>[] getClasses(Class<? extends Annotation> annotation) {
+		List<Class<?>> list = new ArrayList<>();
+		for (Class<?> clazz : this.classes) {
+			if (clazz.getAnnotation(annotation) != null) {
+				list.add(clazz);
+			}
+		}
+		Class<?>[] temp = new Class<?>[list.size()];
+		return list.toArray(temp);
+	}
+
+	public Object getSingleton(Class<?> type) {
+		return getSingleton(type.getName());
+	}
+
+	/**
+	 * 通过beanName获取单例对象
+	 * 
+	 * @param beanName
+	 * @return 单例对象
+	 */
 	public Object getSingleton(String beanName) {
 		synchronized (this.singletonObjects) {
 			// 检查缓存中是否存在实例
@@ -136,5 +159,16 @@ public class ApplicationContext {
 			}
 			return singletonObject;
 		}
+	}
+
+	public void destroy() {
+		if (this.singletonObjects != null) {
+			this.singletonObjects.clear();
+			this.singletonObjects = null;
+		}
+		this.classes = null;
+		this.context = null;
+		if (logger.isDebugEnabled())
+			logger.debug("ApplicationContext destroyed");
 	}
 }
