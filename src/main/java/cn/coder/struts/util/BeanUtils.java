@@ -1,6 +1,7 @@
 package cn.coder.struts.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashSet;
 
 import org.slf4j.Logger;
@@ -52,25 +53,41 @@ public class BeanUtils {
 		}
 	}
 
-	//private static final List<String> PRIMITIVE_TYPES = Arrays.asList("boolean", "byte", "char", "short", "int", "long",
-	//		"float", "double");
+	// private static final List<String> PRIMITIVE_TYPES =
+	// Arrays.asList("boolean", "byte", "char", "short", "int", "long",
+	// "float", "double");
 
 	public static Object valueToType(Class<?> type, String value) {
 		// 判断空或null，直接返回
-		if (value == null || value.length() == 0)
-			return value;
-		if (value.getClass().equals(type))
-			return value;
-		switch (type.getName()) {
-		case "int":
-		case "java.lang.Integer":
-			return Integer.parseInt(value);
-		case "long":
-		case "java.lang.Long":
-			return Long.parseLong(value);
-		default:
-			return value;
+		if (value == null)
+			return null;
+		// 不为空
+		if (value.trim().length() > 0) {
+			switch (type.getName()) {
+			case "int":
+			case "java.lang.Integer":
+				return Integer.parseInt(value);
+			case "long":
+			case "java.lang.Long":
+				return Long.parseLong(value);
+			case "java.util.Date":
+				return DateEx.toDate(value);
+			default:
+				return value;
+			}
 		}
+		// 如果类型是字符串
+		if ("java.lang.String".equals(type.getName()))
+			return value.trim();
+		return null;
+	}
+
+	public static void setValue(Field field, Object obj, Object value) throws Exception {
+		if (Modifier.isFinal(field.getModifiers()))
+			return;
+		if (!field.isAccessible())
+			field.setAccessible(true);
+		field.set(obj, value);
 	}
 
 }

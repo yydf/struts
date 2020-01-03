@@ -98,7 +98,7 @@ public abstract class AbstractHandler implements Handler {
 			for (int i = 0; i < parameters.length; i++) {
 				p = parameters[i].getAnnotation(Param.class);
 				if (p != null) {
-					args[i] = ctrl.getParameter(parameters[i].getType(), p.value());
+					args[i] = ctrl.getParameter(p.value(), parameters[i].getType());
 				} else {
 					if (parameters[i].getType().isAssignableFrom(HttpServletRequest.class)) {
 						args[i] = req.getRequest();
