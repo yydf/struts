@@ -4,9 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cn.coder.struts.support.ServletWebRequest;
 
 public class ModelAndView extends AbstractView {
+	private static final Logger logger = LoggerFactory.getLogger(ModelAndView.class);
 
 	private String viewName;
 	private final Map<String, Object> data;
@@ -52,6 +56,9 @@ public class ModelAndView extends AbstractView {
 			req.setRequestAttr(entry.getKey(), entry.getValue());
 		}
 		req.forward(mav.getViewName());
+		if (logger.isDebugEnabled()) {
+			logger.debug("[RENDER]{}", mav.getViewName());
+		}
 	}
 
 }

@@ -142,7 +142,7 @@ public class ApplicationContext {
 				try {
 					Class<?> clazz = Class.forName(beanName);
 					singletonObject = clazz.newInstance();
-					Field[] fields = clazz.getDeclaredFields();
+					Field[] fields = BeanUtils.getDeclaredFields(clazz);
 					for (Field field : fields) {
 						if (!Modifier.isFinal(field.getModifiers()) && field.getAnnotation(Resource.class) != null) {
 							if (!field.isAccessible())

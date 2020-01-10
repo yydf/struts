@@ -3,7 +3,6 @@ package cn.coder.struts.support;
 import java.lang.reflect.Field;
 import java.net.URLEncoder;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -13,6 +12,11 @@ import cn.coder.struts.util.DESUtils;
 import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.view.ModelAndView;
 
+/**
+ * 基础控制类
+ * @author YYDF
+ *
+ */
 public abstract class Controller {
 	private static final ThreadLocal<ServletWebRequest> LOCAL_DATA = new ThreadLocal<>();
 
@@ -55,8 +59,8 @@ public abstract class Controller {
 	public <T> T getPostData(Class<T> type) {
 		try {
 			T entity = type.newInstance();
-			Set<Field> fields = BeanUtils.getDeclaredFields(type);
 			Object obj;
+			Field[] fields = BeanUtils.getDeclaredFields(type);
 			for (Field field : fields) {
 				obj = getParameter(field.getName(), field.getType());
 				if (obj != null) {

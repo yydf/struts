@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,8 +105,8 @@ public final class JSONWrapper {
 	private static Map<String, Object> getBeanValue(Object obj) {
 		HashMap<String, Object> map = new HashMap<>();
 		try {
-			Set<Field> fields = BeanUtils.getDeclaredFields(obj.getClass());
 			Object obj2;
+			Field[] fields = BeanUtils.getDeclaredFields(obj.getClass());
 			for (Field field : fields) {
 				if (!field.isAccessible())
 					field.setAccessible(true);

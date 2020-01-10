@@ -37,10 +37,11 @@ public class BeanUtils {
 		return base + path;
 	}
 
-	public static HashSet<Field> getDeclaredFields(Class<?> clazz) {
+	public static Field[] getDeclaredFields(Class<?> clazz) {
 		HashSet<Field> fieldList = new HashSet<>();
 		getDeclaredFields(clazz, fieldList);
-		return fieldList;
+		Field[] temp = new Field[fieldList.size()];
+		return fieldList.toArray(temp);
 	}
 
 	private static void getDeclaredFields(Class<?> clazz, HashSet<Field> fieldList) {
