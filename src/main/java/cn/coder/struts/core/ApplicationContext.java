@@ -24,6 +24,7 @@ import cn.coder.struts.view.JSONView;
 import cn.coder.struts.view.ModelAndView;
 import cn.coder.struts.view.TextView;
 import cn.coder.struts.view.View;
+import cn.coder.struts.wrapper.MultipartRequestWrapper.processFile;
 
 public class ApplicationContext {
 	private static final Logger logger = LoggerFactory.getLogger(ApplicationContext.class);
@@ -111,6 +112,16 @@ public class ApplicationContext {
 
 	public Class<?>[] getClasses() {
 		return this.classes;
+	}
+
+	public processFile getFileProcess() {
+		for (Class<?> clazz : classes) {
+			if (processFile.class.isAssignableFrom(clazz)) {
+				processFile process = (processFile) this.getSingleton(clazz.getName());
+				return process;
+			}
+		}
+		return null;
 	}
 
 	public Class<?>[] getClasses(Class<? extends Annotation> annotation) {

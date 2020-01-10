@@ -23,10 +23,6 @@ public final class MultipartRequestWrapper {
 	private final HashMap<String, String> paras = new HashMap<>();
 	private final HashMap<String, MultipartFile> multipartFiles = new HashMap<>();
 
-	public MultipartRequestWrapper(HttpServletRequest req) {
-		this(req, null);
-	}
-
 	public MultipartRequestWrapper(HttpServletRequest req, processFile process) {
 		wrapperRequest(req, process);
 		if (logger.isDebugEnabled())

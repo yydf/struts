@@ -1,7 +1,5 @@
 package cn.coder.struts.core;
 
-import java.io.IOException;
-
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -31,12 +29,6 @@ public abstract class AbstractDispatcher {
 		sc.setAttribute(ATTRIBUTE_APPLICATION_CONTEXT, this.context);
 		this.servletContext = sc;
 		this.context.doScan();
-	}
-
-	protected static void noHandlerFound(ServletWebRequest req) throws IOException {
-		if (logger.isDebugEnabled()) 
-			logger.debug("No handler found for request [{}]", req.getRequestURI());
-		req.sendError(HttpServletResponse.SC_NOT_FOUND);
 	}
 
 	protected static void processError(ServletWebRequest req, Exception dispatchException) throws Exception {

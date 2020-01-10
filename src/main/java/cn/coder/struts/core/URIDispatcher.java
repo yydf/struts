@@ -6,6 +6,8 @@ import java.util.Enumeration;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,7 @@ import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
 import cn.coder.struts.support.ServletWebRequest;
 import cn.coder.struts.view.View;
+import cn.coder.struts.wrapper.MultipartRequestWrapper.processFile;
 
 public class URIDispatcher extends AbstractDispatcher {
 	private static final Logger logger = LoggerFactory.getLogger(URIDispatcher.class);
@@ -23,6 +26,7 @@ public class URIDispatcher extends AbstractDispatcher {
 	private HandlerAdapter[] handlerAdapters;
 	private View[] views;
 	private Method[] destroyMethods;
+	private processFile process;
 
 	public URIDispatcher(FilterConfig filterConfig) {
 		super(filterConfig.getServletContext());
@@ -33,6 +37,7 @@ public class URIDispatcher extends AbstractDispatcher {
 		initHandlerAdapters();
 		initViews();
 		runWebInitializer();
+		initFileProcess();
 	}
 
 	private void initHandlers() {
@@ -45,6 +50,10 @@ public class URIDispatcher extends AbstractDispatcher {
 
 	private void initViews() {
 		this.views = this.context.getViews();
+	}
+
+	private void initFileProcess() {
+		this.process = this.context.getFileProcess();
 	}
 
 	private void runWebInitializer() {
@@ -67,7 +76,8 @@ public class URIDispatcher extends AbstractDispatcher {
 		}
 	}
 
-	public void doDispatch(ServletWebRequest req) throws ServletException {
+	public boolean doDispatch(ServletRequest request, ServletResponse response) throws ServletException {
+		final ServletWebRequest req = new ServletWebRequest(request, response, this.process);
 		if (logger.isDebugEnabled()) {
 			logger.debug("URIDispatcher processing " + req.getMethod() + " request for [" + req.getRequestURI() + "]");
 			Enumeration<?> attrNames = req.getParameterNames();
@@ -80,14 +90,15 @@ public class URIDispatcher extends AbstractDispatcher {
 		try {
 			Handler handler = getHandler(req, this.handlers);
 			if (handler == null) {
-				noHandlerFound(req);
-				return;
+				if (logger.isDebugEnabled()) 
+					logger.debug("No handler found for request [{}]", req.getRequestURI());
+				return false;
 			}
 
 			if (!handler.preHandle(req)) {
 				if (logger.isDebugEnabled())
 					logger.debug("Dispatcher stoped by '{}' preHandle", handler);
-				return;
+				return true;
 			}
 
 			Object result = null;
@@ -112,6 +123,7 @@ public class URIDispatcher extends AbstractDispatcher {
 		} finally {
 			req.clear();
 		}
+		return true;
 	}
 
 	public synchronized void clear() {
@@ -130,7 +142,7 @@ public class URIDispatcher extends AbstractDispatcher {
 			this.destroyMethods = null;
 		}
 		super.clear();
-		if (logger.isDebugEnabled()) 
+		if (logger.isDebugEnabled())
 			logger.debug("URIDispatcher cleared");
 	}
 

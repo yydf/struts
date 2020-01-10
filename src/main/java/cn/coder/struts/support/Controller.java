@@ -14,6 +14,7 @@ import cn.coder.struts.view.ModelAndView;
 
 /**
  * 基础控制类
+ * 
  * @author YYDF
  *
  */
@@ -54,6 +55,10 @@ public abstract class Controller {
 		if (str != null)
 			return (T) BeanUtils.valueToType(type, StringUtils.filterJSNull(str));
 		return null;
+	}
+
+	protected MultipartFile getMultipartFile(String name) {
+		return LOCAL_DATA.get().getMultipartFile(name);
 	}
 
 	public <T> T getPostData(Class<T> type) {

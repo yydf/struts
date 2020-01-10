@@ -20,7 +20,7 @@ public class MultipartFile {
 
 	private String fileName;
 	private String fieldName;
-	private InputStream inputStream;
+	private InputStream stream;
 	private long size;
 	private String contentType;
 	private String extension;
@@ -28,7 +28,7 @@ public class MultipartFile {
 	public MultipartFile(Map<String, String> headers, InputStream inputStream) throws IOException {
 		this.fileName = getFileName(headers);
 		this.fieldName = getFieldName(headers);
-		this.inputStream = inputStream;
+		this.stream = inputStream;
 		this.size = (long) inputStream.available();
 		this.contentType = headers.get(CONTENT_TYPE);
 		if (!StringUtils.isEmpty(fileName)) {
@@ -47,7 +47,7 @@ public class MultipartFile {
 	private static String getFieldName(Map<String, String> headers) {
 		return Streams.parseValue(headers.get(CONTENT_DISPOSITION), "name");
 	}
-	
+
 	public long getSize() {
 		return this.size;
 	}
@@ -69,37 +69,24 @@ public class MultipartFile {
 	}
 
 	public boolean transferTo(File dest) {
-		if (this.inputStream == null)
+		if (this.stream == null || dest == null)
 			return false;
-		FileOutputStream fos = null;
+		if (!dest.getParentFile().exists())
+			dest.getParentFile().mkdirs();
 		try {
-			if (!dest.getParentFile().exists())
-				dest.getParentFile().mkdirs();
-			fos = new FileOutputStream(dest);
-			byte[] buffer = new byte[102400];
-			int n = 0;
-			while ((n = inputStream.read(buffer)) > 0) {
-				fos.write(buffer, 0, n);
-			}
-			return true;
+			return Streams.copy(this.stream, new FileOutputStream(dest), true) > 0;
 		} catch (IOException e) {
-			if (logger.isErrorEnabled())
-				logger.error("Transfer file faild", e);
+			logger.error("Transfer file faild", e);
 			return false;
-		} finally {
-			// 关闭输入输出流
-			Streams.close(inputStream);
-			Streams.close(fos);
 		}
 	}
 
 	public void clear() {
 		this.fileName = null;
 		this.extension = null;
-		this.inputStream = null;
+		this.stream = null;
 		this.fieldName = null;
 		this.contentType = null;
 	}
-
 
 }

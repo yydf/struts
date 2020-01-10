@@ -10,10 +10,9 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import cn.coder.struts.core.URIDispatcher;
-import cn.coder.struts.support.ServletWebRequest;
 
 public class StrutsFilter implements Filter {
-	
+
 	private static final String DEFAULT_ENCODING = "UTF-8";
 	private URIDispatcher dispatcher;
 
@@ -24,12 +23,14 @@ public class StrutsFilter implements Filter {
 	}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+	public void doFilter(final ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 		request.setCharacterEncoding(DEFAULT_ENCODING);
 		response.setCharacterEncoding(DEFAULT_ENCODING);
-		//分发请求
-		dispatcher.doDispatch(new ServletWebRequest(request, response));
+		// 分发请求
+		if (!dispatcher.doDispatch(request, response)) {
+			chain.doFilter(request, response);
+		}
 	}
 
 	@Override

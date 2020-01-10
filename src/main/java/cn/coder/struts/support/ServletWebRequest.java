@@ -12,21 +12,28 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
+import cn.coder.struts.wrapper.MultipartRequestWrapper.processFile;
 
 public final class ServletWebRequest {
+	private static final Logger logger = LoggerFactory.getLogger(ServletWebRequest.class);
 
 	private HttpSession session;
 	private HttpServletRequest req;
 	private HttpServletResponse res;
 	private MultipartRequestWrapper multipartWrapper;
 
-	public ServletWebRequest(ServletRequest request, ServletResponse response) {
+	public ServletWebRequest(ServletRequest request, ServletResponse response, processFile process) {
 		this.req = (HttpServletRequest) request;
 		this.res = (HttpServletResponse) response;
 		this.session = this.req.getSession();
 		if (MultipartRequestWrapper.isMultipartContent(this.req)) {
-			multipartWrapper = new MultipartRequestWrapper(this.req);
+			if (logger.isDebugEnabled())
+				logger.debug("Multipart request");
+			multipartWrapper = new MultipartRequestWrapper(this.req, process);
 		}
 	}
 
@@ -45,7 +52,7 @@ public final class ServletWebRequest {
 	public HttpServletResponse getResponse() {
 		return this.res;
 	}
-	
+
 	public Enumeration<String> getParameterNames() {
 		return this.req.getParameterNames();
 	}
@@ -97,6 +104,11 @@ public final class ServletWebRequest {
 		return this.req.getRemoteAddr();
 	}
 
+	public boolean supportGzip() {
+		String accept = req.getHeader("Accept-Encoding");
+		return accept != null && accept.indexOf("gzip") > -1;
+	}
+
 	public void forward(String path) throws ServletException, IOException {
 		this.req.getRequestDispatcher(path).forward(this.req, this.res);
 	}
@@ -120,7 +132,7 @@ public final class ServletWebRequest {
 	public void sendError(int sc) throws IOException {
 		this.res.sendError(sc);
 	}
-	
+
 	public void sendError(int sc, String msg) throws IOException {
 		this.res.sendError(sc, msg);
 	}
@@ -135,8 +147,4 @@ public final class ServletWebRequest {
 		this.res = null;
 	}
 
-	public boolean supportGzip() {
-		String accept = req.getHeader("Accept-Encoding");
-		return accept != null && accept.indexOf("gzip") > -1;
-	}
 }
