@@ -4,7 +4,7 @@
 
 	<groupId>cn.4coder</groupId>
 	<artifactId>struts</artifactId>
-	<version>0.0.9</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>struts</name>

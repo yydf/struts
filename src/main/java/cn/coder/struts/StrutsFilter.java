@@ -10,6 +10,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 import cn.coder.struts.core.URIDispatcher;
+import cn.coder.struts.holder.RequestHolder;
 
 public class StrutsFilter implements Filter {
 
@@ -27,8 +28,11 @@ public class StrutsFilter implements Filter {
 			throws IOException, ServletException {
 		request.setCharacterEncoding(DEFAULT_ENCODING);
 		response.setCharacterEncoding(DEFAULT_ENCODING);
+		
+		RequestHolder.hold(request, response);
+		
 		// 分发请求
-		if (!dispatcher.doDispatch(request, response)) {
+		if (!dispatcher.doDispatch()) {
 			chain.doFilter(request, response);
 		}
 	}

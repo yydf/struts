@@ -25,16 +25,23 @@ public final class ServletWebRequest {
 	private HttpServletRequest req;
 	private HttpServletResponse res;
 	private MultipartRequestWrapper multipartWrapper;
+	private boolean multipartContent;
 
-	public ServletWebRequest(ServletRequest request, ServletResponse response, processFile process) {
+	public ServletWebRequest(ServletRequest request, ServletResponse response) {
 		this.req = (HttpServletRequest) request;
 		this.res = (HttpServletResponse) response;
 		this.session = this.req.getSession();
-		if (MultipartRequestWrapper.isMultipartContent(this.req)) {
-			if (logger.isDebugEnabled())
-				logger.debug("Multipart request");
-			multipartWrapper = new MultipartRequestWrapper(this.req, process);
-		}
+		this.multipartContent = MultipartRequestWrapper.isMultipartContent(this.req);
+		if (this.multipartContent && logger.isDebugEnabled())
+			logger.debug("Multipart request");
+	}
+
+	public boolean isMultipartContent() {
+		return this.multipartContent;
+	}
+
+	public void setMultipartRequestProcess(processFile process) {
+		this.multipartWrapper = new MultipartRequestWrapper(this.req, process);
 	}
 
 	public Object getSession(String attr) {

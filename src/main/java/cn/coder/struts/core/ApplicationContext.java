@@ -14,6 +14,7 @@ import javax.servlet.ServletContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.coder.struts.event.StrutsEventListener;
 import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
 import cn.coder.struts.handler.MatchableURIHandler;
@@ -87,6 +88,13 @@ public class ApplicationContext {
 		list.add(new ModelAndView());
 		addOtherSupport(list, View.class, false);
 		View[] temp = new View[list.size()];
+		return list.toArray(temp);
+	}
+
+	public StrutsEventListener[] getListeners() {
+		List<StrutsEventListener> list = new ArrayList<>();
+		addOtherSupport(list, StrutsEventListener.class, false);
+		StrutsEventListener[] temp = new StrutsEventListener[list.size()];
 		return list.toArray(temp);
 	}
 

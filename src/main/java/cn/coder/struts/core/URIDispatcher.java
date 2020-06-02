@@ -6,15 +6,16 @@ import java.util.Enumeration;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.annotation.WebInitializer;
+import cn.coder.struts.event.ServletRequestHandleEvent;
+import cn.coder.struts.event.StrutsEventListener;
 import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
+import cn.coder.struts.holder.RequestHolder;
 import cn.coder.struts.support.ServletWebRequest;
 import cn.coder.struts.view.View;
 import cn.coder.struts.wrapper.MultipartRequestWrapper.processFile;
@@ -25,6 +26,7 @@ public class URIDispatcher extends AbstractDispatcher {
 	private Handler[] handlers;
 	private HandlerAdapter[] handlerAdapters;
 	private View[] views;
+	private StrutsEventListener[] listeners;
 	private Method[] destroyMethods;
 	private processFile process;
 
@@ -37,6 +39,7 @@ public class URIDispatcher extends AbstractDispatcher {
 		initHandlerAdapters();
 		initViews();
 		runWebInitializer();
+		initListeners();
 		initFileProcess();
 	}
 
@@ -50,6 +53,10 @@ public class URIDispatcher extends AbstractDispatcher {
 
 	private void initViews() {
 		this.views = this.context.getViews();
+	}
+
+	private void initListeners() {
+		this.listeners = this.context.getListeners();
 	}
 
 	private void initFileProcess() {
@@ -76,8 +83,11 @@ public class URIDispatcher extends AbstractDispatcher {
 		}
 	}
 
-	public boolean doDispatch(ServletRequest request, ServletResponse response) throws ServletException {
-		final ServletWebRequest req = new ServletWebRequest(request, response, this.process);
+	public boolean doDispatch() throws ServletException {
+		final ServletWebRequest req = RequestHolder.getContext();
+		if (req.isMultipartContent()) {
+			req.setMultipartRequestProcess(this.process);
+		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("URIDispatcher processing " + req.getMethod() + " request for [" + req.getRequestURI() + "]");
 			Enumeration<?> attrNames = req.getParameterNames();
@@ -90,7 +100,7 @@ public class URIDispatcher extends AbstractDispatcher {
 		try {
 			Handler handler = getHandler(req, this.handlers);
 			if (handler == null) {
-				if (logger.isDebugEnabled()) 
+				if (logger.isDebugEnabled())
 					logger.debug("No handler found for request [{}]", req.getRequestURI());
 				return false;
 			}
@@ -121,9 +131,18 @@ public class URIDispatcher extends AbstractDispatcher {
 		} catch (Exception e) {
 			throw new ServletException(e);
 		} finally {
+			publicEvent(new ServletRequestHandleEvent(this, req));
 			req.clear();
 		}
 		return true;
+	}
+
+	private void publicEvent(ServletRequestHandleEvent event) {
+		for (StrutsEventListener listener : this.listeners) {
+			if (listener.support() == event.getClass()) {
+				listener.onEvent(event);
+			}
+		}
 	}
 
 	public synchronized void clear() {
