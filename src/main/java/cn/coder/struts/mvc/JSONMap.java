@@ -1,4 +1,4 @@
-package cn.coder.struts.support;
+package cn.coder.struts.mvc;
 
 import java.util.HashMap;
 import java.util.Map;

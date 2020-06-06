@@ -12,13 +12,15 @@ import cn.coder.struts.annotation.Request;
 public class BeanUtils {
 	private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
 
-	public static Class<?> toClass(String clazz, boolean replace) {
+	public static String toBeanName(String clazz) {
+		clazz = clazz.replace("/WEB-INF/classes/", "");
+		clazz = clazz.replace('/', '.');
+		clazz = clazz.replace(".class", "");
+		return clazz;
+	}
+
+	public static Class<?> toClass(String clazz) {
 		try {
-			if (replace) {
-				clazz = clazz.replace("/WEB-INF/classes/", "");
-				clazz = clazz.replace('/', '.');
-				clazz = clazz.replace(".class", "");
-			}
 			return Class.forName(clazz);
 		} catch (ClassNotFoundException e) {
 			if (logger.isWarnEnabled())

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.zip.GZIPOutputStream;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
@@ -14,6 +15,11 @@ public abstract class AbstractView implements View {
 
 	private static final String ENCODING = "UTF-8";
 	private static final int LOG_LIMIIT = 1024;
+	
+	protected static boolean supportGzip(HttpServletRequest req) {
+		String accept = req.getHeader("Accept-Encoding");
+		return accept != null && accept.indexOf("gzip") > -1;
+	}
 
 	/**
 	 * 响应文本，如果长度大于512，则根据客户端判断是否压缩

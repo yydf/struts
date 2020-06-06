@@ -1,4 +1,4 @@
-package cn.coder.struts.support;
+package cn.coder.struts.mvc;
 
 import java.lang.reflect.Field;
 import java.net.URLEncoder;
@@ -6,11 +6,13 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.util.DESUtils;
 import cn.coder.struts.util.StringUtils;
-import cn.coder.struts.view.ModelAndView;
+import cn.coder.struts.view.JSPView;
+import cn.coder.struts.wrapper.MultipartRequestWrapper;
 
 /**
  * 基础控制类
@@ -19,22 +21,24 @@ import cn.coder.struts.view.ModelAndView;
  *
  */
 public abstract class Controller {
-	private static final ThreadLocal<ServletWebRequest> LOCAL_DATA = new ThreadLocal<>();
-
-	public void init(ServletWebRequest web) {
-		LOCAL_DATA.set(web);
-	}
-
 	protected HttpServletRequest getRequest() {
-		return LOCAL_DATA.get().getRequest();
+		return ServletRequestHolder.getRequestContext();
 	}
 
 	protected HttpServletResponse getResponse() {
-		return LOCAL_DATA.get().getResponse();
+		return ServletRequestHolder.getResponseContext();
+	}
+
+	protected HttpSession getSession() {
+		return getRequest().getSession();
 	}
 
 	protected Object getSession(String attr) {
-		return LOCAL_DATA.get().getSession(attr);
+		return getSession().getAttribute(attr);
+	}
+
+	protected Object getAttribute(String name) {
+		return getRequest().getAttribute(name);
 	}
 
 	protected String getParameter(String name) {
@@ -42,23 +46,35 @@ public abstract class Controller {
 	}
 
 	protected void setSessionAttr(String name, Object value) {
-		LOCAL_DATA.get().setSessionAttr(name, value);
+		getSession().setAttribute(name, value);
 	}
 
 	protected void removeSessionAttr(String name) {
-		LOCAL_DATA.get().removeSessionAttr(name);
+		getSession().removeAttribute(name);
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T getParameter(String name, Class<T> type) {
-		String str = LOCAL_DATA.get().getParameter(name);
-		if (str != null)
-			return (T) BeanUtils.valueToType(type, StringUtils.filterJSNull(str));
+		// Attribute优先级高
+		Object obj = getRequest().getAttribute(name);
+		if (obj == null) {
+			MultipartRequestWrapper wrapper = (MultipartRequestWrapper) getAttribute(
+					"struts.servlet.multipart.wrapper");
+			if (wrapper != null)
+				obj = wrapper.getField(name, null);
+			else
+				obj = getRequest().getParameter(name);
+		}
+		if (obj != null)
+			return (T) BeanUtils.valueToType(type, StringUtils.filterJSNull(obj));
 		return null;
 	}
 
 	protected MultipartFile getMultipartFile(String name) {
-		return LOCAL_DATA.get().getMultipartFile(name);
+		MultipartRequestWrapper wrapper = (MultipartRequestWrapper) getAttribute("struts.servlet.multipart.wrapper");
+		if (wrapper != null)
+			return wrapper.getMultipartFile(name);
+		return null;
 	}
 
 	public <T> T getPostData(Class<T> type) {
@@ -79,11 +95,11 @@ public abstract class Controller {
 	}
 
 	protected String getRemoteAddr() {
-		return LOCAL_DATA.get().getRemoteAddr();
+		return getRequest().getRemoteAddr();
 	}
 
-	protected static ModelAndView getView(String name) {
-		return new ModelAndView(name);
+	protected static JSPView getView(String name) {
+		return new JSPView(name);
 	}
 
 	protected static String createToken(String key, Object... args) throws Exception {
@@ -115,9 +131,5 @@ public abstract class Controller {
 
 	protected static JSONMap getError(int errId, String msg) {
 		return JSONMap.error(errId, msg);
-	}
-
-	public void clear() {
-		LOCAL_DATA.remove();
 	}
 }

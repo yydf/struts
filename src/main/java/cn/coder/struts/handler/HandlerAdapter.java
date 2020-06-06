@@ -1,11 +1,12 @@
 package cn.coder.struts.handler;
 
-import cn.coder.struts.support.ServletWebRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public interface HandlerAdapter {
 
 	boolean supports(Handler handler);
 
-	Object handle(ServletWebRequest req, Handler handler) throws Exception;
+	Object handle(HttpServletRequest req, HttpServletResponse res, Handler handler) throws Exception;
 
 }

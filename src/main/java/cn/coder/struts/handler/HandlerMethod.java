@@ -6,8 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 
-import cn.coder.struts.support.Controller;
-import cn.coder.struts.support.ServletWebRequest;
+import javax.servlet.http.HttpServletRequest;
+
+import cn.coder.struts.mvc.Controller;
 
 public final class HandlerMethod {
 
@@ -62,9 +63,9 @@ public final class HandlerMethod {
 		return this.paraValues.size() > 0;
 	}
 
-	public void fillRequest(ServletWebRequest req) {
+	public void fillRequest(HttpServletRequest req) {
 		for (String para : this.matched) {
-			req.setRequestAttr(para, this.paraValues.get(para));
+			req.setAttribute(para, this.paraValues.get(para));
 		}
 	}
 

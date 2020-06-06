@@ -1,46 +1,90 @@
 package cn.coder.struts;
 
-import java.io.IOException;
+import java.util.Enumeration;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-import cn.coder.struts.core.URIDispatcher;
-import cn.coder.struts.holder.RequestHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class StrutsFilter implements Filter {
+import cn.coder.struts.event.ServletRequestHandleEvent;
+import cn.coder.struts.handler.Handler;
+import cn.coder.struts.handler.HandlerAdapter;
+import cn.coder.struts.view.View;
 
-	private static final String DEFAULT_ENCODING = "UTF-8";
-	private URIDispatcher dispatcher;
-
-	@Override
-	public void init(FilterConfig filterConfig) throws ServletException {
-		dispatcher = new URIDispatcher(filterConfig);
-		dispatcher.init();
-	}
+public final class StrutsFilter extends AbstractStrutsFilter {
+	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
 
 	@Override
-	public void doFilter(final ServletRequest request, ServletResponse response, FilterChain chain)
-			throws IOException, ServletException {
-		request.setCharacterEncoding(DEFAULT_ENCODING);
-		response.setCharacterEncoding(DEFAULT_ENCODING);
-		
-		RequestHolder.hold(request, response);
-		
-		// 分发请求
-		if (!dispatcher.doDispatch()) {
-			chain.doFilter(request, response);
+	protected void doDispatch(long startTime, HttpServletRequest request, HttpServletResponse response) throws ServletException {
+		if (logger.isDebugEnabled()) {
+			logger.debug("URIDispatcher processing {} request for [{}]", request.getMethod(), request.getRequestURI());
+			Enumeration<String> attrNames = request.getParameterNames();
+			while (attrNames.hasMoreElements()) {
+				String attrName = attrNames.nextElement();
+				logger.debug("Parameter:[{}] {}", attrName, request.getParameter(attrName));
+			}
+		}
+
+		Handler handler = null;
+		Object result = null;
+		Exception dispatchException = null;
+
+		try {
+			checkMultipart(request);
+
+			handler = getHandler(request);
+			if (handler == null) {
+				if (logger.isDebugEnabled())
+					logger.debug("No handler for request [{}]", request.getRequestURI());
+				return;
+			}
+
+			if (!handler.preHandle(request, response)) {
+				if (logger.isDebugEnabled())
+					logger.debug("Dispatcher stoped by '{}' preHandle", handler);
+				return;
+			}
+
+			try {
+				HandlerAdapter adapter = getHandlerAdapter(handler);
+				result = adapter.handle(request, response, handler);
+			} catch (Exception e) {
+				dispatchException = e;
+			}
+
+			// 处理异常和返回值
+			processResultView(request, response, result, dispatchException);
+
+		} catch (Exception e) {
+			throw new ServletException(e);
+		} finally {
+			if (handler != null) {
+				handler.finish(request, response, result, dispatchException);
+			}
+			publishEvent(new ServletRequestHandleEvent(this, request, response, startTime, result, dispatchException));
+			clearMultipart(request);
 		}
 	}
 
-	@Override
-	public void destroy() {
-		dispatcher.clear();
-		dispatcher = null;
-	}
+	private void processResultView(HttpServletRequest req, HttpServletResponse res, Object result, Exception error)
+			throws ServletException, Exception {
+		if (error != null) {
+			if (logger.isWarnEnabled())
+				logger.warn("Dispatcher processed with error:", error);
+			String errMsg = error.getCause() != null ? error.getCause().toString() : error.getMessage();
+			res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errMsg);
+			return;
+		}
 
+		if (result == null) {
+			if (logger.isDebugEnabled())
+				logger.debug("The result is null or void");
+			return;
+		}
+		View view = getView(result);
+		view.render(result, req, res);
+	}
 }

@@ -1,11 +1,13 @@
 package cn.coder.struts.handler;
 
-import cn.coder.struts.core.ApplicationContext;
-import cn.coder.struts.support.ServletWebRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-public class SimpleHandlerAdapter implements HandlerAdapter {
+import cn.coder.struts.StrutsApplicationContext;
 
-	public SimpleHandlerAdapter(ApplicationContext applicationContext) {
+public final class SimpleHandlerAdapter implements HandlerAdapter {
+
+	public SimpleHandlerAdapter(StrutsApplicationContext context) {
 		// TODO Auto-generated constructor stub
 	}
 
@@ -15,8 +17,8 @@ public class SimpleHandlerAdapter implements HandlerAdapter {
 	}
 
 	@Override
-	public Object handle(ServletWebRequest req, Handler handler) throws Exception {
-		return ((AbstractHandler) handler).handleRequest(req);
+	public Object handle(HttpServletRequest req, HttpServletResponse res, Handler handler) throws Exception {
+		return ((AbstractHandler) handler).handleRequest(req, res);
 	}
 
 }

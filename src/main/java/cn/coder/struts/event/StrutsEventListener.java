@@ -2,7 +2,7 @@ package cn.coder.struts.event;
 
 public interface StrutsEventListener {
 	
-	Class<?> support();
+	boolean listen(Class<?> clazz);
 
 	void onEvent(Object event);
 

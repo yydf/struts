@@ -1,11 +1,12 @@
 package cn.coder.struts.view;
 
-import cn.coder.struts.support.ServletWebRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public interface View {
 
 	boolean supports(Object result);
 
-	void render(ServletWebRequest req, Object result) throws Exception;
+	void render(Object result, HttpServletRequest req, HttpServletResponse res) throws Exception;
 
 }

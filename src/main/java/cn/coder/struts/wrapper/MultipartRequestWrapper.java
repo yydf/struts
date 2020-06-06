@@ -1,5 +1,6 @@
 package cn.coder.struts.wrapper;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -11,7 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.support.MultipartFile;
+import cn.coder.struts.event.FileUploadListener;
+import cn.coder.struts.mvc.MultipartFile;
 import cn.coder.struts.util.Streams;
 
 public final class MultipartRequestWrapper {
@@ -23,13 +25,13 @@ public final class MultipartRequestWrapper {
 	private final HashMap<String, String> paras = new HashMap<>();
 	private final HashMap<String, MultipartFile> multipartFiles = new HashMap<>();
 
-	public MultipartRequestWrapper(HttpServletRequest req, processFile process) {
-		wrapperRequest(req, process);
+	public MultipartRequestWrapper(HttpServletRequest req, FileUploadListener upload) {
+		wrapperRequest(req, (upload == null ? new DefaultFileUpload() : upload));
 		if (logger.isDebugEnabled())
 			logger.debug("Wrapper multipart request");
 	}
 
-	private void wrapperRequest(HttpServletRequest req, processFile process) {
+	private void wrapperRequest(HttpServletRequest req, FileUploadListener upload) {
 		try {
 			final InputStream input = req.getInputStream();
 
@@ -48,7 +50,7 @@ public final class MultipartRequestWrapper {
 				else {
 					MultipartFile file = new MultipartFile(headers, stream.getInputStream());
 					if (file.getSize() > 0)
-						paras.put(file.getFieldName(), process.processMultipartFile(file));
+						paras.put(file.getFieldName(), upload.uploadMultipartFile(file));
 					multipartFiles.put(file.getFieldName(), file);
 				}
 				nextPart = stream.readBoundary();
@@ -170,9 +172,8 @@ public final class MultipartRequestWrapper {
 	}
 
 	public static final boolean isMultipartContent(HttpServletRequest request) {
-		if (!"POST".equalsIgnoreCase(request.getMethod())) {
+		if (!"POST".equalsIgnoreCase(request.getMethod()))
 			return false;
-		}
 		String contentType = request.getContentType();
 		if (contentType == null) {
 			return false;
@@ -203,7 +204,14 @@ public final class MultipartRequestWrapper {
 		multipartFiles.clear();
 	}
 
-	public interface processFile {
-		String processMultipartFile(MultipartFile file);
+	private final class DefaultFileUpload implements FileUploadListener {
+
+		@Override
+		public String uploadMultipartFile(MultipartFile file) {
+			String fileName = System.currentTimeMillis() + file.getExtension();
+			file.transferTo(new File("/" + fileName));
+			return fileName;
+		}
+
 	}
 }

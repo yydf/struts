@@ -1,13 +1,14 @@
 package cn.coder.struts.handler;
 
-import cn.coder.struts.support.ServletWebRequest;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 public interface Handler {
 
-	boolean lookup(ServletWebRequest req);
+	boolean lookup(HttpServletRequest req);
 
-	boolean preHandle(ServletWebRequest req);
+	boolean preHandle(HttpServletRequest request, HttpServletResponse response);
 
-	void finishHandle(ServletWebRequest req, Object result, Exception dispatchException);
+	void finish(HttpServletRequest req, HttpServletResponse res, Object result, Exception error);
 
 }

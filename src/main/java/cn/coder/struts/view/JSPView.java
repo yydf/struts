@@ -4,22 +4,23 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.support.ServletWebRequest;
-
-public class ModelAndView extends AbstractView {
-	private static final Logger logger = LoggerFactory.getLogger(ModelAndView.class);
+public final class JSPView extends AbstractView {
+	private static final Logger logger = LoggerFactory.getLogger(JSPView.class);
 
 	private String viewName;
 	private final Map<String, Object> data;
 
-	public ModelAndView() {
+	public JSPView() {
 		this(null);
 	}
 
-	public ModelAndView(String name) {
+	public JSPView(String name) {
 		this.viewName = name;
 		this.data = new HashMap<>();
 	}
@@ -30,7 +31,7 @@ public class ModelAndView extends AbstractView {
 		return this.viewName;
 	}
 
-	public ModelAndView addObject(String name, Object obj) {
+	public JSPView addObject(String name, Object obj) {
 		this.data.put(name, obj);
 		return this;
 	}
@@ -45,17 +46,17 @@ public class ModelAndView extends AbstractView {
 
 	@Override
 	public boolean supports(Object result) {
-		return (result instanceof ModelAndView);
+		return (result instanceof JSPView);
 	}
 
 	@Override
-	public void render(ServletWebRequest req, Object result) throws Exception {
-		ModelAndView mav = (ModelAndView) result;
+	public void render(Object result, HttpServletRequest req, HttpServletResponse res) throws Exception {
+		JSPView mav = (JSPView) result;
 		Map<String, Object> data = mav.getData();
 		for (Entry<String, Object> entry : data.entrySet()) {
-			req.setRequestAttr(entry.getKey(), entry.getValue());
+			req.setAttribute(entry.getKey(), entry.getValue());
 		}
-		req.forward(mav.getViewName());
+		req.getRequestDispatcher(mav.getViewName()).forward(req, res);
 		if (logger.isDebugEnabled()) {
 			logger.debug("[RENDER]{}", mav.getViewName());
 		}

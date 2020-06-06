@@ -7,20 +7,21 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpServletRequest;
+
+import cn.coder.struts.StrutsApplicationContext;
 import cn.coder.struts.annotation.Request;
 import cn.coder.struts.annotation.Skip;
-import cn.coder.struts.core.ApplicationContext;
-import cn.coder.struts.support.ServletWebRequest;
 import cn.coder.struts.util.BeanUtils;
 
-public class MatchableURIHandler extends AbstractHandler {
+public final class MatchableURIHandler extends AbstractHandler {
 
-	public MatchableURIHandler(ApplicationContext context) {
+	public MatchableURIHandler(StrutsApplicationContext context) {
 		super(context);
 	}
 
 	@Override
-	protected HandlerMethod getHandlerMethod(ServletWebRequest req) {
+	protected HandlerMethod getHandlerMethod(HttpServletRequest req) {
 		if (handlerMethods.isEmpty())
 			return null;
 		HandlerMethod hm = null;
@@ -75,4 +76,5 @@ public class MatchableURIHandler extends AbstractHandler {
 		int end = action.indexOf("}", begin) + 1;
 		return action.substring(begin, end);
 	}
+
 }
