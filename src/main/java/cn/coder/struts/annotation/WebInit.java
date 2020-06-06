@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Inherited
 @Target(ElementType.TYPE)
 @Documented
-public @interface WebInitializer {
+public @interface WebInit {
 
 	String init() default "init";
 	

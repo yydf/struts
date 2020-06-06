@@ -1,5 +1,6 @@
 package cn.coder.struts.wrapper;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -59,6 +60,19 @@ public final class BeanWrapper {
 			for (String beanName : this.beanNames) {
 				c1 = BeanUtils.toClass(beanName);
 				if (c1 != null && type.isAssignableFrom(c1))
+					temp.add(c1);
+			}
+		}
+		return temp;
+	}
+
+	public List<Class<?>> getBeanNamesByAnnotation(Class<? extends Annotation> type) {
+		List<Class<?>> temp = new ArrayList<>();
+		if (!this.beanNames.isEmpty()) {
+			Class<?> c1;
+			for (String beanName : this.beanNames) {
+				c1 = BeanUtils.toClass(beanName);
+				if (c1 != null && c1.getAnnotation(type) != null)
 					temp.add(c1);
 			}
 		}

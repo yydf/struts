@@ -1,5 +1,7 @@
 package cn.coder.struts;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +12,7 @@ import javax.servlet.ServletContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.coder.struts.annotation.WebInit;
 import cn.coder.struts.event.StrutsEventListener;
 import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
@@ -27,6 +30,7 @@ public final class StrutsApplicationContext {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsApplicationContext.class);
 
 	private ServletContext sc;
+	private List<Method> webInits;
 	private List<Handler> handlers;
 	private List<HandlerAdapter> adapters;
 	private List<View> views;
@@ -37,6 +41,7 @@ public final class StrutsApplicationContext {
 
 	public StrutsApplicationContext(FilterConfig filterConfig) {
 		init(filterConfig);
+		doWebInit();
 		defaultHandlers();
 		defaultAdapters();
 		defaultViews();
@@ -49,6 +54,22 @@ public final class StrutsApplicationContext {
 		List<String> beanNames = new ArrayList<>();
 		doScan("/WEB-INF/", beanNames);
 		this.beanWrapper = new BeanWrapper(beanNames);
+	}
+
+	private void doWebInit() {
+		this.webInits = new ArrayList<>();
+		List<Class<?>> temp = this.getBeanNamesByAnnotation(WebInit.class);
+		WebInit webInit;
+		for (Class<?> clazz : temp) {
+			webInit = clazz.getAnnotation(WebInit.class);
+			try {
+				clazz.getDeclaredMethod(webInit.init()).invoke(this.getBean(clazz.getName()));
+				// 将销毁方法加入到缓存，方便调用
+				this.webInits.add(clazz.getDeclaredMethod(webInit.destroy()));
+			} catch (Exception e) {
+				logger.warn("Call the method '" + webInit.init() + "' of '" + clazz + "' faild", e);
+			}
+		}
 	}
 
 	private void doScan(String path, List<String> beanNames) {
@@ -95,7 +116,7 @@ public final class StrutsApplicationContext {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> void findBeans(Class<T> type, List<T> list, boolean initWithContext) {
+	private <T> void findBeans(Class<?> type, List<T> list, boolean initWithContext) {
 		List<Class<?>> classList = this.getBeanNamesByType(type);
 		for (Class<?> clazz : classList) {
 			try {
@@ -131,11 +152,28 @@ public final class StrutsApplicationContext {
 		return this.beanWrapper.getSingleton(beanName);
 	}
 
-	public List<Class<?>> getBeanNamesByType(Class<?> clazz) {
-		return this.beanWrapper.getBeanNamesByType(clazz);
+	public List<Class<?>> getBeanNamesByType(Class<?> type) {
+		return this.beanWrapper.getBeanNamesByType(type);
+	}
+
+	public List<Class<?>> getBeanNamesByAnnotation(Class<? extends Annotation> type) {
+		return this.beanWrapper.getBeanNamesByAnnotation(type);
 	}
 
 	public synchronized void clear() {
+		if (this.webInits != null) {
+			String beanName;
+			for (Method method : this.webInits) {
+				beanName = method.getDeclaringClass().getName();
+				try {
+					method.invoke(this.getBean(beanName));
+				} catch (Exception e) {
+					logger.warn("Call the method '" + method.getName() + "' of '" + beanName + "' faild", e);
+				}
+			}
+			this.webInits.clear();
+			this.webInits = null;
+		}
 		this.handlers = null;
 		this.adapters = null;
 		this.views = null;
