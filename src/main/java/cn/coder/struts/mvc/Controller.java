@@ -21,6 +21,7 @@ import cn.coder.struts.wrapper.MultipartRequestWrapper;
  *
  */
 public abstract class Controller {
+	
 	protected HttpServletRequest getRequest() {
 		return ServletRequestHolder.getRequestContext();
 	}

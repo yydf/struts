@@ -5,8 +5,8 @@ import javax.servlet.http.HttpServletResponse;
 
 public interface HandlerAdapter {
 
-	boolean supports(Handler handler);
+	boolean supports(Object handler);
 
-	Object handle(HttpServletRequest req, HttpServletResponse res, Handler handler) throws Exception;
+	Object handle(HttpServletRequest req, HttpServletResponse res, Object handler) throws Exception;
 
 }

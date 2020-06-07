@@ -12,9 +12,11 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cn.coder.struts.event.FileUploadListener;
 import cn.coder.struts.event.StrutsEventListener;
 import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
+import cn.coder.struts.handler.HandlerChain;
 import cn.coder.struts.mvc.ServletRequestHolder;
 import cn.coder.struts.view.View;
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
@@ -26,6 +28,7 @@ public abstract class AbstractStrutsFilter implements Filter {
 	private List<HandlerAdapter> adapters;
 	private List<View> views;
 	private List<StrutsEventListener> listeners;
+	private FileUploadListener uploadListener;
 	private boolean multipartContent = false;
 
 	private static final String DEFAULT_ENCODING = "UTF-8";
@@ -38,13 +41,14 @@ public abstract class AbstractStrutsFilter implements Filter {
 		this.adapters = this.context.getAdapters();
 		this.views = this.context.getViews();
 		this.listeners = this.context.getListeners();
+		this.uploadListener = this.context.getFileUploadListener();
 	}
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 		long startTime = System.currentTimeMillis();
-		
+
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse res = (HttpServletResponse) response;
 		// 设置编码
@@ -59,7 +63,7 @@ public abstract class AbstractStrutsFilter implements Filter {
 	protected void checkMultipart(HttpServletRequest request) {
 		this.multipartContent = MultipartRequestWrapper.isMultipartContent(request);
 		if (this.multipartContent) {
-			request.setAttribute(MULTIPART_ATTRIBUTE, new MultipartRequestWrapper(request, null));
+			request.setAttribute(MULTIPART_ATTRIBUTE, new MultipartRequestWrapper(request, this.uploadListener));
 		}
 	}
 
@@ -73,15 +77,17 @@ public abstract class AbstractStrutsFilter implements Filter {
 	protected abstract void doDispatch(long startTime, HttpServletRequest request, HttpServletResponse response)
 			throws ServletException;
 
-	protected Handler getHandler(HttpServletRequest req) {
+	protected HandlerChain getHandlerChain(HttpServletRequest req) {
+		HandlerChain chain;
 		for (Handler handler : this.handlers) {
-			if (handler.lookup(req))
-				return handler;
+			chain = handler.getHandlerChain(req);
+			if (chain != null)
+				return chain;
 		}
 		return null;
 	}
 
-	protected HandlerAdapter getHandlerAdapter(Handler handler) throws ServletException {
+	protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletException {
 		for (HandlerAdapter adapter : this.adapters) {
 			if (adapter.supports(handler))
 				return adapter;

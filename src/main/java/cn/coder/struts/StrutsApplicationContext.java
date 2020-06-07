@@ -13,18 +13,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.annotation.WebInit;
+import cn.coder.struts.event.FileUploadListener;
 import cn.coder.struts.event.StrutsEventListener;
 import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
-import cn.coder.struts.handler.MatchableURIHandler;
-import cn.coder.struts.handler.SimpleHandlerAdapter;
-import cn.coder.struts.handler.SimpleURIHandler;
+import cn.coder.struts.handler.MatchableRequestMethodHandler;
+import cn.coder.struts.handler.RequestMethodHandlerAdapter;
+import cn.coder.struts.handler.SimpleRequestMethodHandler;
+import cn.coder.struts.mvc.Interceptor;
 import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.view.JSONView;
 import cn.coder.struts.view.JSPView;
 import cn.coder.struts.view.DefaultView;
 import cn.coder.struts.view.View;
 import cn.coder.struts.wrapper.BeanWrapper;
+import cn.coder.struts.wrapper.OrderWrapper;
 
 public final class StrutsApplicationContext {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsApplicationContext.class);
@@ -33,8 +36,10 @@ public final class StrutsApplicationContext {
 	private List<Method> webInits;
 	private List<Handler> handlers;
 	private List<HandlerAdapter> adapters;
+	private List<Interceptor> interceptors;
 	private List<View> views;
 	private List<StrutsEventListener> listeners;
+	private FileUploadListener uploadListener;
 	private BeanWrapper beanWrapper;
 
 	private static final String ATTRIBUTE_APPLICATION_CONTEXT = StrutsApplicationContext.class.getName() + ".CONTEXT";
@@ -44,8 +49,10 @@ public final class StrutsApplicationContext {
 		doWebInit();
 		defaultHandlers();
 		defaultAdapters();
+		defaultInterceptors();
 		defaultViews();
 		defaultListeners();
+		defaultUploadListener();
 	}
 
 	private void init(FilterConfig filterConfig) {
@@ -59,6 +66,7 @@ public final class StrutsApplicationContext {
 	private void doWebInit() {
 		this.webInits = new ArrayList<>();
 		List<Class<?>> temp = this.getBeanNamesByAnnotation(WebInit.class);
+		OrderWrapper.sort(temp);
 		WebInit webInit;
 		for (Class<?> clazz : temp) {
 			webInit = clazz.getAnnotation(WebInit.class);
@@ -90,15 +98,21 @@ public final class StrutsApplicationContext {
 
 	private void defaultHandlers() {
 		this.handlers = new ArrayList<>();
-		this.handlers.add(new SimpleURIHandler(this));
-		this.handlers.add(new MatchableURIHandler(this));
+		this.handlers.add(new SimpleRequestMethodHandler(this));
+		this.handlers.add(new MatchableRequestMethodHandler(this));
 		findBeans(Handler.class, this.handlers, true);
 	}
 
 	private void defaultAdapters() {
 		this.adapters = new ArrayList<>();
-		this.adapters.add(new SimpleHandlerAdapter(this));
-		findBeans(HandlerAdapter.class, this.adapters, true);
+		this.adapters.add(new RequestMethodHandlerAdapter());
+		findBeans(HandlerAdapter.class, this.adapters, false);
+	}
+
+	private void defaultInterceptors() {
+		this.interceptors = new ArrayList<>();
+		findBeans(Interceptor.class, this.interceptors, false);
+		OrderWrapper.sort(this.interceptors);
 	}
 
 	private void defaultViews() {
@@ -113,6 +127,19 @@ public final class StrutsApplicationContext {
 	private void defaultListeners() {
 		this.listeners = new ArrayList<>();
 		findBeans(StrutsEventListener.class, this.listeners, false);
+	}
+
+	private void defaultUploadListener() {
+		List<Class<?>> temp = this.getBeanNamesByType(FileUploadListener.class);
+		if (temp.size() > 0) {
+			if (temp.size() > 1)
+				logger.warn("The FileUploadListener must be only one");
+			try {
+				this.uploadListener = (FileUploadListener) temp.get(0).newInstance();
+			} catch (Exception e) {
+				logger.warn("Create bean of '" + temp.get(0) + "' faild", e);
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -140,12 +167,20 @@ public final class StrutsApplicationContext {
 		return this.adapters;
 	}
 
+	public List<Interceptor> getInterceptors() {
+		return interceptors;
+	}
+
 	public List<View> getViews() {
 		return this.views;
 	}
 
 	public List<StrutsEventListener> getListeners() {
 		return this.listeners;
+	}
+
+	public FileUploadListener getFileUploadListener() {
+		return this.uploadListener;
 	}
 
 	public Object getBean(String beanName) {
@@ -176,7 +211,10 @@ public final class StrutsApplicationContext {
 		}
 		this.handlers = null;
 		this.adapters = null;
+		this.interceptors = null;
 		this.views = null;
+		this.listeners = null;
+		this.uploadListener = null;
 		this.beanWrapper.clear();
 		if (this.sc != null) {
 			this.sc.removeAttribute(ATTRIBUTE_APPLICATION_CONTEXT);

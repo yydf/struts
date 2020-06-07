@@ -2,71 +2,46 @@ package cn.coder.struts.handler;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Matcher;
-
-import javax.servlet.http.HttpServletRequest;
-
-import cn.coder.struts.mvc.Controller;
 
 public final class HandlerMethod {
 
+	private final Object bean;
 	private final Method method;
-	private final Class<?> controller;
+	private final boolean skiped;
 	private final Parameter[] parameters;
-	private boolean skip;
-	private List<String> matched;
-	private HashMap<String, String> paraValues;
+	private final List<String> matched;
 
-	public HandlerMethod(Method method) {
-		this.method = method;
-		this.parameters = method.getParameters();
-		this.controller = method.getDeclaringClass();
-		this.paraValues = new HashMap<>();
+	public HandlerMethod(Object bean, Method m, boolean skip) {
+		this(bean, m, skip, null);
 	}
 
-	public String getController() {
-		return this.controller.getName();
+	public HandlerMethod(Object bean, Method m, boolean skip, List<String> paras) {
+		this.bean = bean;
+		this.method = m;
+		this.skiped = skip;
+		this.parameters = m.getParameters();
+		this.matched = paras;
 	}
 
-	public Object invoke(Controller ctrl, Object[] args) throws Exception {
-		return this.method.invoke(ctrl, args);
+	public boolean getSkiped() {
+		return this.skiped;
+	}
+
+	public Object getBean() {
+		return this.bean;
+	}
+
+	public Method getMethod() {
+		return this.method;
+	}
+
+	public List<String> getMathed() {
+		return this.matched;
 	}
 
 	public Parameter[] getParameters() {
 		return this.parameters;
-	}
-
-	public void setSkip(boolean s) {
-		this.skip = s;
-	}
-
-	public boolean getSkip() {
-		return this.skip;
-	}
-
-	public void matchValues(Matcher match) {
-		paraValues.clear();
-		int num = 1;
-		for (String para : this.matched) {
-			paraValues.put(para, match.group(num));
-			num++;
-		}
-	}
-
-	public void setMatch(List<String> paras) {
-		this.matched = paras;
-	}
-
-	public boolean hasMatchedValues() {
-		return this.paraValues.size() > 0;
-	}
-
-	public void fillRequest(HttpServletRequest req) {
-		for (String para : this.matched) {
-			req.setAttribute(para, this.paraValues.get(para));
-		}
 	}
 
 }

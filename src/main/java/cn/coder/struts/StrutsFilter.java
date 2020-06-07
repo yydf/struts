@@ -10,17 +10,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.event.ServletRequestHandleEvent;
-import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
-import cn.coder.struts.view.View;
+import cn.coder.struts.handler.HandlerChain;
 
 public final class StrutsFilter extends AbstractStrutsFilter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
 
 	@Override
-	protected void doDispatch(long startTime, HttpServletRequest request, HttpServletResponse response) throws ServletException {
+	protected void doDispatch(long startTime, HttpServletRequest request, HttpServletResponse response)
+			throws ServletException {
 		if (logger.isDebugEnabled()) {
-			logger.debug("URIDispatcher processing {} request for [{}]", request.getMethod(), request.getRequestURI());
+			logger.debug("Processing {} request for [{}]", request.getMethod(), request.getRequestURI());
 			Enumeration<String> attrNames = request.getParameterNames();
 			while (attrNames.hasMoreElements()) {
 				String attrName = attrNames.nextElement();
@@ -28,29 +28,30 @@ public final class StrutsFilter extends AbstractStrutsFilter {
 			}
 		}
 
-		Handler handler = null;
+		HandlerChain chain = null;
 		Object result = null;
 		Exception dispatchException = null;
 
 		try {
 			checkMultipart(request);
 
-			handler = getHandler(request);
-			if (handler == null) {
+			chain = getHandlerChain(request);
+			if (chain == null || chain.getHandler() == null) {
 				if (logger.isDebugEnabled())
 					logger.debug("No handler for request [{}]", request.getRequestURI());
 				return;
 			}
 
-			if (!handler.preHandle(request, response)) {
+			if (!chain.doPreHandle(request, response)) {
 				if (logger.isDebugEnabled())
-					logger.debug("Dispatcher stoped by '{}' preHandle", handler);
+					logger.debug("Request stoped by '{}' preHandle", chain);
 				return;
 			}
 
 			try {
-				HandlerAdapter adapter = getHandlerAdapter(handler);
-				result = adapter.handle(request, response, handler);
+				HandlerAdapter adapter = getHandlerAdapter(chain.getHandler());
+				result = adapter.handle(request, response, chain.getHandler());
+				chain.doPostHandle(request, response, result);
 			} catch (Exception e) {
 				dispatchException = e;
 			}
@@ -61,9 +62,9 @@ public final class StrutsFilter extends AbstractStrutsFilter {
 		} catch (Exception e) {
 			throw new ServletException(e);
 		} finally {
-			if (handler != null) {
-				handler.finish(request, response, result, dispatchException);
-			}
+			// if (handler != null) {
+			// handler.finish(request, response, result, dispatchException);
+			// }
 			publishEvent(new ServletRequestHandleEvent(this, request, response, startTime, result, dispatchException));
 			clearMultipart(request);
 		}
@@ -72,8 +73,7 @@ public final class StrutsFilter extends AbstractStrutsFilter {
 	private void processResultView(HttpServletRequest req, HttpServletResponse res, Object result, Exception error)
 			throws ServletException, Exception {
 		if (error != null) {
-			if (logger.isWarnEnabled())
-				logger.warn("Dispatcher processed with error:", error);
+			logger.warn("Processed with error:", error);
 			String errMsg = error.getCause() != null ? error.getCause().toString() : error.getMessage();
 			res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errMsg);
 			return;
@@ -84,7 +84,6 @@ public final class StrutsFilter extends AbstractStrutsFilter {
 				logger.debug("The result is null or void");
 			return;
 		}
-		View view = getView(result);
-		view.render(result, req, res);
+		getView(result).render(result, req, res);
 	}
 }
