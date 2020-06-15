@@ -65,8 +65,7 @@ public final class StrutsApplicationContext {
 
 	private void doWebInit() {
 		this.webInits = new ArrayList<>();
-		List<Class<?>> temp = this.getBeanNamesByAnnotation(WebInit.class);
-		OrderWrapper.sort(temp);
+		Class<?>[] temp = this.getBeanNamesByAnnotation(WebInit.class, true);
 		WebInit webInit;
 		for (Class<?> clazz : temp) {
 			webInit = clazz.getAnnotation(WebInit.class);
@@ -130,22 +129,22 @@ public final class StrutsApplicationContext {
 	}
 
 	private void defaultUploadListener() {
-		List<Class<?>> temp = this.getBeanNamesByType(FileUploadListener.class);
-		if (temp.size() > 0) {
-			if (temp.size() > 1)
+		Class<?>[] temp = this.getBeanNamesByType(FileUploadListener.class);
+		if (temp.length > 0) {
+			if (temp.length > 1)
 				logger.warn("The FileUploadListener must be only one");
 			try {
-				this.uploadListener = (FileUploadListener) temp.get(0).newInstance();
+				this.uploadListener = (FileUploadListener) temp[0].newInstance();
 			} catch (Exception e) {
-				logger.warn("Create bean of '" + temp.get(0) + "' faild", e);
+				logger.warn("Create bean of '" + temp[0] + "' faild", e);
 			}
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	private <T> void findBeans(Class<?> type, List<T> list, boolean initWithContext) {
-		List<Class<?>> classList = this.getBeanNamesByType(type);
-		for (Class<?> clazz : classList) {
+		Class<?>[] classArray = this.getBeanNamesByType(type);
+		for (Class<?> clazz : classArray) {
 			try {
 				Object obj;
 				if (initWithContext)
@@ -187,12 +186,12 @@ public final class StrutsApplicationContext {
 		return this.beanWrapper.getSingleton(beanName);
 	}
 
-	public List<Class<?>> getBeanNamesByType(Class<?> type) {
+	public Class<?>[] getBeanNamesByType(Class<?> type) {
 		return this.beanWrapper.getBeanNamesByType(type);
 	}
 
-	public List<Class<?>> getBeanNamesByAnnotation(Class<? extends Annotation> type) {
-		return this.beanWrapper.getBeanNamesByAnnotation(type);
+	public Class<?>[] getBeanNamesByAnnotation(Class<? extends Annotation> type, boolean sortable) {
+		return this.beanWrapper.getBeanNamesByAnnotation(type, sortable);
 	}
 
 	public synchronized void clear() {

@@ -53,7 +53,7 @@ public final class BeanWrapper {
 		}
 	}
 
-	public List<Class<?>> getBeanNamesByType(Class<?> type) {
+	public Class<?>[] getBeanNamesByType(Class<?> type) {
 		List<Class<?>> temp = new ArrayList<>();
 		if (!this.beanNames.isEmpty()) {
 			Class<?> c1;
@@ -63,10 +63,10 @@ public final class BeanWrapper {
 					temp.add(c1);
 			}
 		}
-		return temp;
+		return toArray(temp);
 	}
 
-	public List<Class<?>> getBeanNamesByAnnotation(Class<? extends Annotation> type) {
+	public Class<?>[] getBeanNamesByAnnotation(Class<? extends Annotation> type, boolean sortable) {
 		List<Class<?>> temp = new ArrayList<>();
 		if (!this.beanNames.isEmpty()) {
 			Class<?> c1;
@@ -76,7 +76,14 @@ public final class BeanWrapper {
 					temp.add(c1);
 			}
 		}
-		return temp;
+		if (sortable)
+			OrderWrapper.sort(temp);
+		return toArray(temp);
+	}
+
+	private static Class<?>[] toArray(List<Class<?>> list) {
+		Class<?>[] temp = new Class<?>[list.size()];
+		return list.toArray(temp);
 	}
 
 	public void clear() {

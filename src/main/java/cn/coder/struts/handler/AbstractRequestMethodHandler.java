@@ -24,7 +24,7 @@ public abstract class AbstractRequestMethodHandler implements Handler {
 	}
 
 	private void detectHandlers() {
-		List<Class<?>> beanNames = getApplicationContext().getBeanNamesByType(Controller.class);
+		Class<?>[] beanNames = getApplicationContext().getBeanNamesByType(Controller.class);
 		for (Class<?> clazz : beanNames) {
 			registerHandler(clazz);
 		}
