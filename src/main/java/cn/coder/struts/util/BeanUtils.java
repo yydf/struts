@@ -30,13 +30,22 @@ public class BeanUtils {
 	}
 
 	public static String genericPath(Request req, Request req2) {
-		String path = req2.value().startsWith("/") ? req2.value() : "/" + req2.value();
+		if (req == null && req2 == null)
+			return null;
+		if (req == null) {
+			return mappedPath(req2.value());
+		}
+		if (req2 == null) {
+			logger.warn("Not found request for '{}'", req.value());
+			return null;
+		}
+		return mappedPath(req.value()) + mappedPath(req2.value());
+	}
+
+	private static String mappedPath(String path) {
 		if (path.startsWith("~"))
 			return path.substring(1);
-		if (req == null)
-			return path;
-		String base = req.value().startsWith("/") ? req.value() : "/" + req.value();
-		return base + path;
+		return path.startsWith("/") ? path : "/" + path;
 	}
 
 	public static Field[] getDeclaredFields(Class<?> clazz) {

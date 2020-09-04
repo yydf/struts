@@ -40,7 +40,7 @@ public final class MatchableRequestMethodHandler extends AbstractRequestMethodHa
 		String path;
 		for (Method method : methods) {
 			path = BeanUtils.genericPath(r1, method.getAnnotation(Request.class));
-			if (matchablePath(path)) {
+			if (path != null && matchablePath(path)) {
 				createHandlerMethod(clazz, method, path);
 			}
 		}

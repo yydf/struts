@@ -26,7 +26,7 @@ public final class SimpleRequestMethodHandler extends AbstractRequestMethodHandl
 		String path;
 		for (Method method : methods) {
 			path = BeanUtils.genericPath(r1, method.getAnnotation(Request.class));
-			if (!matchablePath(path)) {
+			if (path != null && !matchablePath(path)) {
 				boolean skip = getSkip(clazz, method);
 				Object bean = getApplicationContext().getBean(clazz.getName());
 				getHandlerMethods().put(path, new HandlerMethod(bean, method, skip));

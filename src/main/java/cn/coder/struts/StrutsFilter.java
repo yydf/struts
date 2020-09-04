@@ -1,8 +1,14 @@
 package cn.coder.struts;
 
+import java.io.IOException;
 import java.util.Enumeration;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -13,8 +19,24 @@ import cn.coder.struts.event.ServletRequestHandleEvent;
 import cn.coder.struts.handler.HandlerAdapter;
 import cn.coder.struts.handler.HandlerChain;
 
-public final class StrutsFilter extends AbstractStrutsFilter {
+public final class StrutsFilter extends AbstractStrutsFilter implements Filter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
+
+	@Override
+	public void init(FilterConfig filterConfig) throws ServletException {
+		super.initContext(filterConfig);
+	}
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+			throws IOException, ServletException {
+		long startTime = System.currentTimeMillis();
+
+		HttpServletRequest req = (HttpServletRequest) request;
+		HttpServletResponse res = (HttpServletResponse) response;
+		
+		super.dispatch(startTime, req, res);
+	}
 
 	@Override
 	protected void doDispatch(long startTime, HttpServletRequest request, HttpServletResponse response)
@@ -85,5 +107,10 @@ public final class StrutsFilter extends AbstractStrutsFilter {
 			return;
 		}
 		getView(result).render(result, req, res);
+	}
+
+	@Override
+	public void destroy() {
+		super.clear();
 	}
 }
