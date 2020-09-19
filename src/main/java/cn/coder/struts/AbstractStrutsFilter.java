@@ -12,7 +12,7 @@ import cn.coder.struts.event.FileUploadListener;
 import cn.coder.struts.event.StrutsEventListener;
 import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
-import cn.coder.struts.handler.HandlerChain;
+import cn.coder.struts.handler.SimpleExecutor;
 import cn.coder.struts.mvc.ServletRequestHolder;
 import cn.coder.struts.view.View;
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
@@ -67,12 +67,12 @@ public abstract class AbstractStrutsFilter {
 	protected abstract void doDispatch(long startTime, HttpServletRequest request, HttpServletResponse response)
 			throws ServletException;
 
-	protected HandlerChain getHandlerChain(HttpServletRequest req) {
-		HandlerChain chain;
+	protected SimpleExecutor getExecutor(HttpServletRequest req) {
+		SimpleExecutor executor;
 		for (Handler handler : this.handlers) {
-			chain = handler.getHandlerChain(req);
-			if (chain != null)
-				return chain;
+			executor = handler.getExecutor(req);
+			if (executor != null)
+				return executor;
 		}
 		return null;
 	}

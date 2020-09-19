@@ -17,13 +17,15 @@ import org.slf4j.LoggerFactory;
 
 import cn.coder.struts.event.ServletRequestHandleEvent;
 import cn.coder.struts.handler.HandlerAdapter;
-import cn.coder.struts.handler.HandlerChain;
+import cn.coder.struts.handler.SimpleExecutor;
 
 public final class StrutsFilter extends AbstractStrutsFilter implements Filter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
 
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
+		if (logger.isDebugEnabled())
+			logger.debug("Starting init content");
 		super.initContext(filterConfig);
 	}
 
@@ -34,7 +36,7 @@ public final class StrutsFilter extends AbstractStrutsFilter implements Filter {
 
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse res = (HttpServletResponse) response;
-		
+
 		super.dispatch(startTime, req, res);
 	}
 
@@ -50,31 +52,32 @@ public final class StrutsFilter extends AbstractStrutsFilter implements Filter {
 			}
 		}
 
-		HandlerChain chain = null;
+		SimpleExecutor executor = null;
 		Object result = null;
-		Exception dispatchException = null;
+		Throwable dispatchException = null;
 
 		try {
 			checkMultipart(request);
 
-			chain = getHandlerChain(request);
-			if (chain == null || chain.getHandler() == null) {
+			executor = getExecutor(request);
+			if (executor == null || executor.getHandler() == null) {
 				if (logger.isDebugEnabled())
 					logger.debug("No handler for request [{}]", request.getRequestURI());
 				return;
 			}
 
-			if (!chain.doPreHandle(request, response)) {
-				if (logger.isDebugEnabled())
-					logger.debug("Request stoped by '{}' preHandle", chain);
-				return;
-			}
-
 			try {
-				HandlerAdapter adapter = getHandlerAdapter(chain.getHandler());
-				result = adapter.handle(request, response, chain.getHandler());
-				chain.doPostHandle(request, response, result);
-			} catch (Exception e) {
+				if (!executor.checkBefore(request, response)) {
+					if (logger.isDebugEnabled())
+						logger.debug("Request stoped by '{}' executor", executor);
+					return;
+				}
+				
+				HandlerAdapter handlerAdapter = getHandlerAdapter(executor.getHandler());
+				result = handlerAdapter.handle(request, response, executor.getHandler());
+				
+				executor.doAfter(result);
+			} catch (Throwable e) {
 				dispatchException = e;
 			}
 
@@ -92,11 +95,11 @@ public final class StrutsFilter extends AbstractStrutsFilter implements Filter {
 		}
 	}
 
-	private void processResultView(HttpServletRequest req, HttpServletResponse res, Object result, Exception error)
+	private void processResultView(HttpServletRequest req, HttpServletResponse res, Object result, Throwable dispatchError)
 			throws ServletException, Exception {
-		if (error != null) {
-			logger.warn("Processed with error:", error);
-			String errMsg = error.getCause() != null ? error.getCause().toString() : error.getMessage();
+		if (dispatchError != null) {
+			logger.warn("Processed with error:", dispatchError);
+			String errMsg = dispatchError.getCause() != null ? dispatchError.getCause().toString() : dispatchError.getMessage();
 			res.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errMsg);
 			return;
 		}
@@ -111,6 +114,8 @@ public final class StrutsFilter extends AbstractStrutsFilter implements Filter {
 
 	@Override
 	public void destroy() {
+		if (logger.isDebugEnabled())
+			logger.debug("Starting destroy content");
 		super.clear();
 	}
 }

@@ -17,9 +17,8 @@ import cn.coder.struts.event.FileUploadListener;
 import cn.coder.struts.event.StrutsEventListener;
 import cn.coder.struts.handler.Handler;
 import cn.coder.struts.handler.HandlerAdapter;
-import cn.coder.struts.handler.MatchableRequestMethodHandler;
-import cn.coder.struts.handler.RequestMethodHandlerAdapter;
-import cn.coder.struts.handler.SimpleRequestMethodHandler;
+import cn.coder.struts.handler.SimpleHandler;
+import cn.coder.struts.handler.SimpleHandlerAdapter;
 import cn.coder.struts.mvc.Interceptor;
 import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.view.JSONView;
@@ -97,15 +96,14 @@ public final class StrutsApplicationContext {
 
 	private void defaultHandlers() {
 		this.handlers = new ArrayList<>();
-		this.handlers.add(new SimpleRequestMethodHandler(this));
-		this.handlers.add(new MatchableRequestMethodHandler(this));
+		this.handlers.add(new SimpleHandler(this));
 		findBeans(Handler.class, this.handlers, true);
 	}
 
 	private void defaultAdapters() {
 		this.adapters = new ArrayList<>();
-		this.adapters.add(new RequestMethodHandlerAdapter());
-		findBeans(HandlerAdapter.class, this.adapters, false);
+		this.adapters.add(new SimpleHandlerAdapter(this));
+		findBeans(HandlerAdapter.class, this.adapters, true);
 	}
 
 	private void defaultInterceptors() {

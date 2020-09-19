@@ -7,7 +7,7 @@ import cn.coder.struts.StrutsFilter;
 
 public final class ServletRequestHandleEvent {
 
-	private Exception error;
+	private Throwable error;
 	private HttpServletRequest req;
 	private HttpServletResponse res;
 	private Object resultValue;
@@ -15,8 +15,8 @@ public final class ServletRequestHandleEvent {
 	private StrutsFilter dispatcher;
 
 	public ServletRequestHandleEvent(StrutsFilter strutsFilter, HttpServletRequest request,
-			HttpServletResponse response, long startTime, Object result, Exception dispatchException) {
-		this.error = dispatchException;
+			HttpServletResponse response, long startTime, Object result, Throwable dispatchError) {
+		this.error = dispatchError;
 		this.req = request;
 		this.res = response;
 		this.resultValue = result;
@@ -24,7 +24,7 @@ public final class ServletRequestHandleEvent {
 		this.dispatcher = strutsFilter;
 	}
 
-	public Exception getError() {
+	public Throwable getError() {
 		return this.error;
 	}
 

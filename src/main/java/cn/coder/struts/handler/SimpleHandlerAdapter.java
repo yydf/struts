@@ -1,6 +1,5 @@
 package cn.coder.struts.handler;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -9,41 +8,47 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import cn.coder.struts.StrutsApplicationContext;
 import cn.coder.struts.annotation.Param;
 import cn.coder.struts.mvc.Controller;
+import cn.coder.struts.mvc.MappedRequest;
 
-public final class ServletHandlerMethod {
+public final class SimpleHandlerAdapter implements HandlerAdapter {
 
-	private final HandlerMethod hm;
+	private static final String STRUTS_SERVLET_MATCHER = "struts.servlet.request.method.matcher";
 
-	public ServletHandlerMethod(HandlerMethod handler) {
-		this.hm = handler;
+	public SimpleHandlerAdapter(StrutsApplicationContext sac) {
 	}
 
-	public Object handle(HttpServletRequest req, HttpServletResponse res) throws Exception {
-		matchRequest(req);
-		return handleResult(req, res);
+	@Override
+	public boolean supports(Object handler) {
+		return (handler instanceof MappedRequest);
 	}
 
-	private void matchRequest(HttpServletRequest req) {
-		List<String> matched = this.hm.getMathed();
+	@Override
+	public Object handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+		matchRequest(request, (MappedRequest) handler);
+		return handleResult(request, response, (MappedRequest) handler);
+	}
+
+	private void matchRequest(HttpServletRequest req, MappedRequest mr) {
+		List<String> matched = mr.getMathed();
 		if (matched == null || matched.isEmpty())
 			return;
-		Matcher matcher = (Matcher) req.getAttribute("struts.servlet.request.method.matcher");
+		Matcher matcher = (Matcher) req.getAttribute(STRUTS_SERVLET_MATCHER);
 		int num = 1;
 		for (String para : matched) {
 			req.setAttribute(para, matcher.group(num));
 			num++;
 		}
+		req.removeAttribute(STRUTS_SERVLET_MATCHER);
 		matcher = null;
-		req.removeAttribute("struts.servlet.request.method.matcher");
 	}
 
-	private Object handleResult(HttpServletRequest req, HttpServletResponse res) throws Exception {
-		Controller bean = (Controller) this.hm.getBean();
-		Method m = this.hm.getMethod();
-		Object[] args = buildArgs(hm.getParameters(), bean, req, res);
-		return m.invoke(bean, args);
+	private Object handleResult(HttpServletRequest req, HttpServletResponse res, MappedRequest mr) throws Exception {
+		Controller bean = (Controller) mr.getBean();
+		Object[] args = buildArgs(mr.getParameters(), bean, req, res);
+		return mr.getMethod().invoke(bean, args);
 	}
 
 	private static Object[] buildArgs(Parameter[] parameters, Controller ctrl, HttpServletRequest req,
@@ -68,5 +73,4 @@ public final class ServletHandlerMethod {
 		}
 		return args;
 	}
-
 }

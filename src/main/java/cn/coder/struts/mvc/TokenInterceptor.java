@@ -10,31 +10,30 @@ import javax.servlet.http.HttpServletResponse;
  *
  */
 public abstract class TokenInterceptor implements Interceptor {
-
+	
+	//判断是否有权限
+	protected abstract boolean hasPermission(HttpServletRequest request);
+	
+	//没有权限的处理
+	protected abstract void noAuthorizaiton(HttpServletRequest request, HttpServletResponse response);
+	
 	@Override
-	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+	public boolean before(Object[] args) throws Exception {
+		HttpServletRequest request = (HttpServletRequest) args[0];
 		if (!hasPermission(request)) {
-			noAuthorizaiton(request, response);
+			noAuthorizaiton(request, (HttpServletResponse)args[1]);
 			return false;
 		}
 		return true;
 	}
 
-	protected abstract boolean hasPermission(HttpServletRequest request);
-
-	protected abstract void noAuthorizaiton(HttpServletRequest request, HttpServletResponse response);
-
 	@Override
-	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, Object result) {
-		// TODO Auto-generated method stub
-
+	public void after(Object result) throws Exception {
 	}
 
 	@Override
-	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
-			Throwable error) {
-		// TODO Auto-generated method stub
-
+	public void exceptionCaught(Exception exception) throws Throwable {
 	}
 
+	
 }
