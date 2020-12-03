@@ -1,4 +1,4 @@
-package cn.coder.struts.mvc;
+package cn.coder.struts.view;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Map;
 import cn.coder.struts.wrapper.JSONWrapper;
 
 public final class JSONMap {
-	private final Map<String, Object> data = new HashMap<>();
+	private final HashMap<String, Object> data = new HashMap<>();
 	private final JSONWrapper wrapper = new JSONWrapper();
 
 	public static JSONMap success() {
@@ -17,22 +17,22 @@ public final class JSONMap {
 		return new JSONMap().put("success", false).put("errcode", errcode).put("errmsg", errmsg);
 	}
 
-	public JSONMap put(String key, Object obj) {
-		this.data.put(key, obj);
+	public JSONMap put(String key, Object o) {
+		this.data.put(key, o);
 		return this;
 	}
 
-	public JSONMap putAll(Map<String, Object> map) {
-		this.data.putAll(map);
+	public <V> JSONMap putAll(Map<String, V> o) {
+		this.data.putAll(o);
 		return this;
 	}
 
-	public Map<String, Object> getData() {
-		return this.data;
+	public void clear() {
+		this.data.clear();
 	}
 
 	@Override
 	public String toString() {
-		return wrapper.write(this.data);
+		return wrapper.write(data);
 	}
 }

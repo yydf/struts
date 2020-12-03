@@ -2,60 +2,73 @@ package cn.coder.struts.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public final class BeanUtils {
+	private static final ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat>() {
+		@Override
+		protected SimpleDateFormat initialValue() {
+			return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		}
+	};
 
-import cn.coder.struts.annotation.Request;
-
-public class BeanUtils {
-	private static final Logger logger = LoggerFactory.getLogger(BeanUtils.class);
-
-	public static String toBeanName(String clazz) {
-		clazz = clazz.replace("/WEB-INF/classes/", "");
-		clazz = clazz.replace('/', '.');
-		clazz = clazz.replace(".class", "");
-		return clazz;
-	}
-
-	public static Class<?> toClass(String clazz) {
+	public static void setValue(Field field, Object obj, Object value) {
+		if (Modifier.isFinal(field.getModifiers()))
+			return;
 		try {
-			return Class.forName(clazz);
-		} catch (ClassNotFoundException e) {
-			if (logger.isWarnEnabled())
-				logger.warn("'{}' not a class", clazz);
+			if (!field.isAccessible())
+				field.setAccessible(true);
+			field.set(obj, toValue(field.getType(), value));
+		} catch (Exception e) {
+			throw new RuntimeException("Set value faild", e);
 		}
-		return null;
 	}
 
-	public static String genericPath(Request req, Request req2) {
-		if (req == null && req2 == null)
+	public static Object toValue(Class<?> type, Object value) {
+		if (value == null)
 			return null;
-		if (req == null) {
-			return mappedPath(req2.value());
+		if (value.getClass().equals(type))
+			return value;
+		switch (type.getName()) {
+		case "java.lang.String":
+			if (value instanceof Date)
+				return sdf.get().format(value);
+			return value.toString();
+		case "int":
+		case "java.lang.Integer":
+			return ("".equals(value) ? null : Integer.parseInt(value.toString()));
+		case "long":
+		case "java.lang.Long":
+			if (value instanceof Date)
+				return ((Date) value).getTime();
+			return ("".equals(value) ? null : Long.parseLong(value.toString()));
+		case "boolean":
+		case "java.lang.Boolean":
+			return ("".equals(value) ? null : Boolean.parseBoolean(value.toString()));
+		case "double":
+		case "java.lang.Double":
+			return ("".equals(value) ? null : Double.parseDouble(value.toString()));
+		case "float":
+		case "java.lang.Float":
+			return ("".equals(value) ? null : Float.parseFloat(value.toString()));
+		case "java.util.Date":
+			return DateEx.toDate(value);
+		default:
+			throw new RuntimeException("Unkonwn field type " + type.getName());
 		}
-		if (req2 == null) {
-			logger.warn("Not found request for '{}'", req.value());
-			return null;
-		}
-		return mappedPath(req.value()) + mappedPath(req2.value());
 	}
 
-	private static String mappedPath(String path) {
-		if (path.startsWith("~"))
-			return path.substring(1);
-		return path.startsWith("/") ? path : "/" + path;
-	}
-
-	public static Field[] getDeclaredFields(Class<?> clazz) {
-		HashSet<Field> fieldList = new HashSet<>();
+	public static Set<Field> getDeclaredFields(Class<?> clazz) {
+		Set<Field> fieldList = new HashSet<>();
 		getDeclaredFields(clazz, fieldList);
-		Field[] temp = new Field[fieldList.size()];
-		return fieldList.toArray(temp);
+		return fieldList;
 	}
 
-	private static void getDeclaredFields(Class<?> clazz, HashSet<Field> fieldList) {
+	private static void getDeclaredFields(Class<?> clazz, Set<Field> fieldList) {
 		if (clazz != null) {
 			Field[] fields = clazz.getDeclaredFields();
 			for (Field field : fields) {
@@ -65,41 +78,17 @@ public class BeanUtils {
 		}
 	}
 
-	// private static final List<String> PRIMITIVE_TYPES =
-	// Arrays.asList("boolean", "byte", "char", "short", "int", "long",
-	// "float", "double");
-
-	public static Object valueToType(Class<?> type, String value) {
-		// 判断空或null，直接返回
-		if (value == null)
-			return null;
-		// 不为空
-		if (value.trim().length() > 0) {
-			switch (type.getName()) {
-			case "int":
-			case "java.lang.Integer":
-				return Integer.parseInt(value);
-			case "long":
-			case "java.lang.Long":
-				return Long.parseLong(value);
-			case "java.util.Date":
-				return DateEx.toDate(value);
-			default:
-				return value;
+	public static List<?> removeSameItem(List<?> sourceList, Object[] value) {
+		for (int i = 0; i < sourceList.size(); i++) {
+			for (Object type : value) {
+				if (type.equals(sourceList.get(i))) {
+					sourceList.remove(i);
+					i--;
+					break;
+				}
 			}
 		}
-		// 如果类型是字符串
-		if ("java.lang.String".equals(type.getName()))
-			return value.trim();
-		return null;
-	}
-
-	public static void setValue(Field field, Object obj, Object value) throws Exception {
-		if (Modifier.isFinal(field.getModifiers()))
-			return;
-		if (!field.isAccessible())
-			field.setAccessible(true);
-		field.set(obj, value);
+		return sourceList;
 	}
 
 }

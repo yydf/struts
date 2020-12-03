@@ -1,10 +1,8 @@
 package cn.coder.struts.wrapper;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -12,9 +10,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.coder.struts.event.FileUploadListener;
-import cn.coder.struts.mvc.MultipartFile;
 import cn.coder.struts.util.Streams;
+import cn.coder.struts.view.MultipartFile;
 
 public final class MultipartRequestWrapper {
 	private static final Logger logger = LoggerFactory.getLogger(MultipartRequestWrapper.class);
@@ -25,13 +22,13 @@ public final class MultipartRequestWrapper {
 	private final HashMap<String, String> paras = new HashMap<>();
 	private final HashMap<String, MultipartFile> multipartFiles = new HashMap<>();
 
-	public MultipartRequestWrapper(HttpServletRequest req, FileUploadListener upload) {
-		wrapperRequest(req, (upload == null ? new DefaultFileUpload() : upload));
+	public MultipartRequestWrapper(HttpServletRequest req, processFile process) {
+		wrapperRequest(req, process);
 		if (logger.isDebugEnabled())
 			logger.debug("Wrapper multipart request");
 	}
 
-	private void wrapperRequest(HttpServletRequest req, FileUploadListener upload) {
+	private void wrapperRequest(HttpServletRequest req, processFile process) {
 		try {
 			final InputStream input = req.getInputStream();
 
@@ -50,7 +47,7 @@ public final class MultipartRequestWrapper {
 				else {
 					MultipartFile file = new MultipartFile(headers, stream.getInputStream());
 					if (file.getSize() > 0)
-						paras.put(file.getFieldName(), upload.uploadMultipartFile(file));
+						paras.put(file.getFieldName(), process.processMultipartFile(file));
 					multipartFiles.put(file.getFieldName(), file);
 				}
 				nextPart = stream.readBoundary();
@@ -172,8 +169,9 @@ public final class MultipartRequestWrapper {
 	}
 
 	public static final boolean isMultipartContent(HttpServletRequest request) {
-		if (!"POST".equalsIgnoreCase(request.getMethod()))
+		if (!"POST".equalsIgnoreCase(request.getMethod())) {
 			return false;
+		}
 		String contentType = request.getContentType();
 		if (contentType == null) {
 			return false;
@@ -192,10 +190,6 @@ public final class MultipartRequestWrapper {
 		return multipartFiles.get(name);
 	}
 
-	public Iterator<MultipartFile> getMultipartFiles() {
-		return multipartFiles.values().iterator();
-	}
-
 	public void clear() {
 		paras.clear();
 		for (MultipartFile file : multipartFiles.values()) {
@@ -204,14 +198,7 @@ public final class MultipartRequestWrapper {
 		multipartFiles.clear();
 	}
 
-	private final class DefaultFileUpload implements FileUploadListener {
-
-		@Override
-		public String uploadMultipartFile(MultipartFile file) {
-			String fileName = System.currentTimeMillis() + file.getExtension();
-			file.transferTo(new File("/" + fileName));
-			return fileName;
-		}
-
+	public interface processFile {
+		String processMultipartFile(MultipartFile file);
 	}
 }

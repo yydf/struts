@@ -1,4 +1,4 @@
-package cn.coder.struts.mvc;
+package cn.coder.struts.view;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,23 +13,25 @@ import cn.coder.struts.util.Streams;
 import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.wrapper.MultipartRequestWrapper;
 
-public class MultipartFile {
+public final class MultipartFile {
 	private static final Logger logger = LoggerFactory.getLogger(MultipartFile.class);
+
 	private static final String CONTENT_TYPE = "Content-Type";
 	private static final String CONTENT_DISPOSITION = MultipartRequestWrapper.CONTENT_DISPOSITION;
+	private static final String FORM_DATA = MultipartRequestWrapper.FORM_DATA;
 
 	private String fileName;
 	private String fieldName;
-	private InputStream stream;
+	private InputStream inputStream;
 	private long size;
 	private String contentType;
 	private String extension;
 
-	public MultipartFile(Map<String, String> headers, InputStream inputStream) throws IOException {
+	public MultipartFile(Map<String, String> headers, InputStream input) throws IOException {
 		this.fileName = getFileName(headers);
 		this.fieldName = getFieldName(headers);
-		this.stream = inputStream;
-		this.size = (long) inputStream.available();
+		this.inputStream = input;
+		this.size = (long) input.available();
 		this.contentType = headers.get(CONTENT_TYPE);
 		if (!StringUtils.isEmpty(fileName)) {
 			int last = fileName.lastIndexOf(".");
@@ -41,15 +43,21 @@ public class MultipartFile {
 	}
 
 	private static String getFileName(Map<String, String> headers) {
-		return Streams.parseValue(headers.get(CONTENT_DISPOSITION), "filename");
+		String contentDisposition = headers.get(CONTENT_DISPOSITION);
+		if (contentDisposition != null)
+			return Streams.parseValue(contentDisposition, "filename");
+		return null;
 	}
 
 	private static String getFieldName(Map<String, String> headers) {
-		return Streams.parseValue(headers.get(CONTENT_DISPOSITION), "name");
+		String contentDisposition = headers.get(CONTENT_DISPOSITION);
+		if (contentDisposition != null && contentDisposition.toLowerCase().startsWith(FORM_DATA))
+			return Streams.parseValue(contentDisposition, "name");
+		return null;
 	}
 
 	public long getSize() {
-		return this.size;
+		return size;
 	}
 
 	public String getContentType() {
@@ -69,24 +77,35 @@ public class MultipartFile {
 	}
 
 	public boolean transferTo(File dest) {
-		if (this.stream == null || dest == null)
+		if (this.inputStream == null)
 			return false;
-		if (!dest.getParentFile().exists())
-			dest.getParentFile().mkdirs();
+		FileOutputStream fos = null;
 		try {
-			return Streams.copy(this.stream, new FileOutputStream(dest), true) > 0;
+			if (!dest.getParentFile().exists())
+				dest.getParentFile().mkdirs();
+			fos = new FileOutputStream(dest);
+			byte[] buffer = new byte[102400];
+			int n = 0;
+			while ((n = inputStream.read(buffer)) > 0) {
+				fos.write(buffer, 0, n);
+			}
+			return true;
 		} catch (IOException e) {
-			logger.error("Transfer file faild", e);
+			if (logger.isErrorEnabled())
+				logger.error("Transfer file faild", e);
 			return false;
+		} finally {
+			// 关闭输入输出流
+			Streams.close(inputStream);
+			Streams.close(fos);
 		}
 	}
 
 	public void clear() {
 		this.fileName = null;
 		this.extension = null;
-		this.stream = null;
+		this.inputStream = null;
 		this.fieldName = null;
 		this.contentType = null;
 	}
-
 }

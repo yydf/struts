@@ -2,14 +2,13 @@ package cn.coder.struts.wrapper;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +38,6 @@ public final class JSONWrapper {
 
 	public String write(Map<String, Object> jsonMap) {
 		try {
-			if (json.length() > 0) {
-				json.setLength(0);
-				logger.debug("Reset json length");
-			}
 			appendMap(jsonMap);
 		} catch (RuntimeException e) {
 			if (logger.isErrorEnabled())
@@ -63,7 +58,7 @@ public final class JSONWrapper {
 	}
 
 	private void appendObj(String key, Object obj, boolean hasNext) {
-		if (obj == null || STR_VERSION_UID.equals(key) || "this$0".equals(key))
+		if (obj == null || STR_VERSION_UID.equals(key))
 			return;
 		if (key != null)
 			json.append(MARKS).append(key).append(MARKS).append(COLON);
@@ -105,8 +100,8 @@ public final class JSONWrapper {
 	private static Map<String, Object> getBeanValue(Object obj) {
 		HashMap<String, Object> map = new HashMap<>();
 		try {
+			Set<Field> fields = BeanUtils.getDeclaredFields(obj.getClass());
 			Object obj2;
-			Field[] fields = BeanUtils.getDeclaredFields(obj.getClass());
 			for (Field field : fields) {
 				if (!field.isAccessible())
 					field.setAccessible(true);
@@ -187,7 +182,6 @@ public final class JSONWrapper {
 
 	private static boolean isNumber(Object obj) {
 		return obj instanceof Integer || obj instanceof Boolean || obj instanceof Double || obj instanceof Long
-				|| obj instanceof Byte || obj instanceof Float || obj instanceof Short || obj instanceof BigDecimal
-				|| obj instanceof BigInteger;
+				|| obj instanceof Byte || obj instanceof Float || obj instanceof Short;
 	}
 }

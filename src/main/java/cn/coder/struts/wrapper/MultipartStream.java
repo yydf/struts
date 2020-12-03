@@ -22,10 +22,6 @@ import java.io.InputStream;
 
 import cn.coder.struts.util.Streams;
 
-/**
- * 解析Multipart
- * 
- */
 public final class MultipartStream {
 
 	// ----------------------------------------------------- Manifest constants
@@ -488,7 +484,7 @@ public final class MultipartStream {
 			if (available() == 0 && makeAvailable() == 0) {
 				return -1;
 			}
-			// ++total;
+			//++total;
 			int b = buffer[head++];
 			if (b >= 0) {
 				return b;
@@ -528,7 +524,7 @@ public final class MultipartStream {
 			res = Math.min(res, len);
 			System.arraycopy(buffer, head, b, off, res);
 			head += res;
-			// total += res;
+			//total += res;
 			return res;
 		}
 
@@ -612,7 +608,7 @@ public final class MultipartStream {
 			}
 
 			// Move the data to the beginning of the buffer.
-			// total += tail - head - pad;
+			//total += tail - head - pad;
 			System.arraycopy(buffer, tail - pad, buffer, 0, pad);
 
 			// Refill buffer with new data.

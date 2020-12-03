@@ -8,15 +8,15 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+@Documented
 @Retention(RUNTIME)
 @Inherited
 @Target({ ElementType.TYPE, ElementType.METHOD })
-@Documented
 public @interface Request {
 
 	String value();
 
-	HttpMethod[] method() default HttpMethod.GET;
+	HttpMethod method() default HttpMethod.GET;
 
 	public enum HttpMethod {
 		GET, POST, PUT

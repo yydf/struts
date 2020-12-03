@@ -8,12 +8,12 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+@Documented
 @Retention(RUNTIME)
 @Inherited
-@Target(ElementType.TYPE)
-@Documented
+@Target({ ElementType.TYPE, ElementType.METHOD })
 public @interface Order {
 
-	int value() default Integer.MIN_VALUE;
-
+	int value() default 0;
+	
 }
