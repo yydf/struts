@@ -25,6 +25,7 @@ import cn.coder.struts.aop.Aop;
 import cn.coder.struts.support.ActionSupport;
 import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.util.ObjectUtils;
+import cn.coder.struts.wrapper.MultipartRequestWrapper;
 import cn.coder.struts.wrapper.OrderWrapper;
 import cn.coder.struts.wrapper.ResponseWrapper;
 
@@ -32,10 +33,12 @@ public final class ActionHandler {
 	private static final Logger logger = LoggerFactory.getLogger(ActionHandler.class);
 
 	private static final ArrayList<Class<?>> EMPTY_INTERCEPTORS = new ArrayList<>();
+	private static final String MULTIPART_ATTRIBUTE = "struts.servlet.multipart.wrapper";
 
 	private ArrayList<Class<?>> interceptors;
 	private HashMap<String, Action> mappings = new HashMap<>();
 	private ResponseWrapper responseWrapper = new ResponseWrapper();
+	private boolean multipartContent = false;
 
 	public ActionHandler(List<Class<?>> controllers, ArrayList<Class<?>> interceptors) {
 		OrderWrapper.sort(interceptors);
@@ -148,7 +151,9 @@ public final class ActionHandler {
 		ActionSupport support = null;
 		try {
 			support = (ActionSupport) Aop.create(action.getController());
-			support.init(req, res);
+
+			checkMultipart(req, support);
+
 			Object[] args = buildArgs(action, support, req, res);
 			Object result = action.getMethod().invoke(support, args);
 			if (result != null) {
@@ -158,9 +163,24 @@ public final class ActionHandler {
 			if (logger.isErrorEnabled())
 				logger.error("Handle action faild", e);
 		} finally {
+			clearMultipart(req);
 			if (support != null) {
 				support.clear();
 			}
+		}
+	}
+
+	private void checkMultipart(HttpServletRequest request, ActionSupport support) {
+		this.multipartContent = MultipartRequestWrapper.isMultipartContent(request);
+		if (this.multipartContent) {
+			request.setAttribute(MULTIPART_ATTRIBUTE, new MultipartRequestWrapper(request, support));
+		}
+	}
+
+	private void clearMultipart(HttpServletRequest request) {
+		if (this.multipartContent) {
+			((MultipartRequestWrapper) request.getAttribute(MULTIPART_ATTRIBUTE)).clear();
+			request.removeAttribute(MULTIPART_ATTRIBUTE);
 		}
 	}
 

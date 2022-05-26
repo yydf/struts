@@ -10,6 +10,10 @@ public final class StringUtils {
 		return o == null || o.toString().length() == 0;
 	}
 
+	public static boolean isNotBlank(Object o) {
+		return !isEmpty(o);
+	}
+
 	public static String filterJSNull(Object str) {
 		if (str == null || STR_NULL.equals(str) || STR_UNDEFINED.equals(str) || STR_NAN.equals(str))
 			return null;

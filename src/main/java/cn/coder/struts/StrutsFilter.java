@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import cn.coder.struts.core.Action;
 import cn.coder.struts.core.StrutsResolver;
 import cn.coder.struts.core.ActionHandler;
+import cn.coder.struts.core.ServletRequestHolder;
 
 public final class StrutsFilter implements Filter {
 	private static final Logger logger = LoggerFactory.getLogger(StrutsFilter.class);
@@ -38,6 +39,9 @@ public final class StrutsFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
+		
+		ServletRequestHolder.hold(request, response);
+		
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse res = (HttpServletResponse) response;
 		req.setCharacterEncoding("utf-8");

@@ -10,6 +10,7 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.coder.struts.core.ServletRequestHolder;
 import cn.coder.struts.util.BeanUtils;
 import cn.coder.struts.util.StringUtils;
 import cn.coder.struts.view.MultipartFile;
@@ -20,47 +21,42 @@ import cn.coder.struts.wrapper.SessionWrapper;
 public abstract class ActionSupport implements processFile {
 	private static final Logger logger = LoggerFactory.getLogger(ActionSupport.class);
 
-	private HttpSession session;
-	private HttpServletRequest request;
-	private HttpServletResponse response;
-	private MultipartRequestWrapper multipartWrapper;
-
-	public void init(HttpServletRequest req, HttpServletResponse res) {
-		this.request = req;
-		this.response = res;
-		this.session = req.getSession();
-		if (MultipartRequestWrapper.isMultipartContent(request)) {
-			multipartWrapper = new MultipartRequestWrapper(request, this);
-		}
-	}
-
-	public abstract String processMultipartFile(MultipartFile file);
-
-	protected HttpSession getSession() {
-		return this.session;
-	}
+	private static final String MULTIPART_ATTRIBUTE = "struts.servlet.multipart.wrapper";
 
 	protected HttpServletRequest getRequest() {
-		return this.request;
+		return ServletRequestHolder.getRequest();
 	}
 
 	protected HttpServletResponse getResponse() {
-		return this.response;
+		return ServletRequestHolder.getResponse();
+	}
+	
+	protected HttpSession getSession() {
+		return getRequest().getSession();
 	}
 
 	protected Object getSession(String name) {
-		return this.session.getAttribute(name);
+		return getSession().getAttribute(name);
 	}
-
+	
 	protected Object getSession(String name, String sessionId) {
 		return SessionWrapper.getAttribute(name, sessionId);
+	}
+
+	protected Object getAttribute(String name) {
+		return getRequest().getAttribute(name);
+	}
+
+	protected MultipartRequestWrapper getMultipartRequestWrapper() {
+		return (MultipartRequestWrapper) getAttribute(MULTIPART_ATTRIBUTE);
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T getParameter(Class<T> clazz, String name) {
 		// 最高优先级
-		Object value = request.getAttribute(name);
-		String str = value == null ? request.getParameter(name) : value.toString();
+		Object value = getRequest().getAttribute(name);
+		String str = value == null ? getRequest().getParameter(name) : value.toString();
+		MultipartRequestWrapper multipartWrapper = getMultipartRequestWrapper();
 		if (multipartWrapper != null)
 			str = multipartWrapper.getField(name, str);
 		return (T) BeanUtils.toValue(clazz, StringUtils.filterJSNull(str));
@@ -71,6 +67,7 @@ public abstract class ActionSupport implements processFile {
 	}
 
 	protected MultipartFile getMultipartFile(String name) {
+		MultipartRequestWrapper multipartWrapper = getMultipartRequestWrapper();
 		if (multipartWrapper != null)
 			return multipartWrapper.getMultipartFile(name);
 		return null;
@@ -96,20 +93,13 @@ public abstract class ActionSupport implements processFile {
 	}
 
 	protected String getRemoteAddr() {
-		String ip = request.getRemoteAddr();
+		String ip = getRequest().getRemoteAddr();
 		if ("127.0.0.1".equals(ip))
-			return request.getHeader("X-Real-IP");
+			return getRequest().getHeader("X-Real-IP");
 		return ip;
 	}
 
 	public void clear() {
-		this.request = null;
-		this.response = null;
-		this.session = null;
-		if (multipartWrapper != null) {
-			multipartWrapper.clear();
-			multipartWrapper = null;
-		}
 	}
 
 }
