@@ -2,6 +2,7 @@ package cn.coder.struts.view;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -66,6 +67,12 @@ public final class ModelAndView {
 		this.temp.put(attr, obj);
 		if (logger.isDebugEnabled())
 			logger.debug("Add object [{}]{}", attr, obj);
+		return this;
+	}
+
+	public ModelAndView addObjectWithSize(String attr, List<?> list) {
+		addObject(attr, list);
+		addObject("size", (list != null ? list.size() : 0));
 		return this;
 	}
 

@@ -39,6 +39,7 @@ public final class ActionHandler {
 	private HashMap<String, Action> mappings = new HashMap<>();
 	private ResponseWrapper responseWrapper = new ResponseWrapper();
 	private boolean multipartContent = false;
+	private String basePath;
 
 	public ActionHandler(List<Class<?>> controllers, ArrayList<Class<?>> interceptors) {
 		OrderWrapper.sort(interceptors);
@@ -154,6 +155,8 @@ public final class ActionHandler {
 
 			checkMultipart(req, support);
 
+			req.setAttribute("basePath", getBasePath(req));
+
 			Object[] args = buildArgs(action, support, req, res);
 			Object result = action.getMethod().invoke(support, args);
 			if (result != null) {
@@ -207,6 +210,17 @@ public final class ActionHandler {
 			}
 		}
 		return args;
+	}
+
+	private String getBasePath(HttpServletRequest request) {
+		if (this.basePath == null) {
+			String path = request.getContextPath();
+			if ("/".equals(path))
+				this.basePath = "";
+			else
+				this.basePath = request.getContextPath() + "/";
+		}
+		return this.basePath;
 	}
 
 	public synchronized void clear() {
