@@ -7,6 +7,7 @@ import javax.servlet.ServletContext;
 import cn.coder.struts.aop.Aop;
 import cn.coder.struts.aop.AopFactory;
 import cn.coder.struts.support.StrutsLoader;
+import cn.coder.struts.util.ThreadEx;
 
 public final class StrutsResolver {
 
@@ -47,7 +48,15 @@ public final class StrutsResolver {
 
 	public synchronized void start() {
 		if (loader != null) {
-			loader.onStartup(this.servletContext);
+			final ServletContext sc = this.servletContext;
+			ThreadEx.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					loader.onStartup(sc);
+				}
+			});
+			
 		}
 	}
 
